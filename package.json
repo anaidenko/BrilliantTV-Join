@@ -2,28 +2,15 @@
   "name": "btv-join",
   "version": "0.1.0",
   "private": true,
-  "dependencies": {
-    "@material-ui/core": "^4.5.2",
-    "flow-bin": "^0.110.1",
-    "husky": "^3.0.9",
-    "lint-staged": "^9.4.2",
-    "paymentfont": "^1.2.5",
-    "prettier": "^1.18.2",
-    "prop-types": "^15.7.2",
-    "react": "^16.11.0",
-    "react-dom": "^16.11.0",
-    "react-router-dom": "^5.1.2",
-    "react-scripts": "3.2.0",
-    "react-stripe-elements": "^5.1.0",
-    "validate.js": "^0.13.1"
-  },
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "flow": "flow",
-    "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx,json,css,scss,md}\""
+    "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx,json,css,scss,md}\"",
+    "lint": "eslint src",
+    "lint:fix": "eslint --fix src"
   },
   "husky": {
     "hooks": {
@@ -50,5 +37,36 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "dependencies": {
+    "@material-ui/core": "^4.5.2",
+    "paymentfont": "^1.2.5",
+    "prop-types": "^15.7.2",
+    "react": "^16.11.0",
+    "react-dom": "^16.11.0",
+    "react-router-dom": "^5.1.2",
+    "react-scripts": "3.2.0",
+    "react-stripe-elements": "^5.1.0",
+    "validate.js": "^0.13.1"
+  },
+  "devDependencies": {
+    "babel-eslint": "10.0.3",
+    "eslint": "6.6.0",
+    "eslint-config-airbnb": "18.0.1",
+    "eslint-config-prettier": "6.5.0",
+    "eslint-plugin-autofix": "^0.0.9",
+    "eslint-plugin-flowtype": "4.3.0",
+    "eslint-plugin-import": "^2.11.0",
+    "eslint-plugin-jest": "23.0.2",
+    "eslint-plugin-jsx-a11y": "^6.0.3",
+    "eslint-plugin-prettier": "3.1.1",
+    "eslint-plugin-react": "^7.8.2",
+    "eslint-plugin-simple-import-sort": "^4.0.0",
+    "eslint-plugin-unicorn": "12.1.0",
+    "flow-bin": "^0.110.1",
+    "flow-typed": "^2.4.0",
+    "husky": "^3.0.9",
+    "lint-staged": "^9.4.2",
+    "prettier": "^1.18.2"
   }
 }
