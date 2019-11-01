@@ -4,21 +4,20 @@
 // Similar to Material UI's <TextField>. Handles focused, empty and error state
 // to correctly show the floating label and error messages etc.
 
-import React, { PureComponent } from 'react';
+import { FormControl, FormHelperText, InputAdornment, InputLabel, OutlinedInput, withStyles } from '@material-ui/core';
 import PropTypes from 'prop-types';
+import React, { PureComponent } from 'react';
 
-import { withStyles, InputAdornment, Box, OutlinedInput, InputLabel, FormControl, FormHelperText } from '@material-ui/core';
+import StripeInput from '../StripeInput';
 
-import StripeInput from '../../components/StripeInput';
-
-const styles = theme => ({
+const styles = () => ({
   root: {},
   brandIcon: {
-    width: 30
+    width: 30,
   },
   input: {
-    padding: '18.5px 14px'
-  }
+    padding: '18.5px 14px',
+  },
 });
 
 const cardBrandToPfClass = {
@@ -28,23 +27,37 @@ const cardBrandToPfClass = {
   discover: 'pf-discover',
   diners: 'pf-diners',
   jcb: 'pf-jcb',
-  unknown: 'pf-credit-card'
+  unknown: 'pf-credit-card',
 };
 
-class StripeElementWrapper extends PureComponent {
-  static displayName = 'StripeElementWrapper';
+type Props = {
+  brandIcon?: boolean,
+  classes?: object,
+  component: object,
+  label: string,
+  labelWidth?: number,
+  placeholder?: string,
+  showError?: boolean,
+};
 
-  static propTypes = {
-    component: PropTypes.func.isRequired,
-    label: PropTypes.string.isRequired
-  };
+type State = {
+  brandIcon: string,
+  empty: boolean,
+  error: string,
+  focused: boolean,
+};
 
-  state = {
-    focused: false,
-    empty: true,
-    error: false,
-    brandIcon: 'pf-credit-card'
-  };
+class StripeElementWrapper extends PureComponent<Props, State> {
+  constructor() {
+    super();
+
+    this.state = {
+      focused: false,
+      empty: true,
+      error: false,
+      brandIcon: '',
+    };
+  }
 
   handleBlur = () => {
     this.setState({ focused: false });
@@ -54,12 +67,11 @@ class StripeElementWrapper extends PureComponent {
     this.setState({ focused: true });
   };
 
-  handleChange = changeObj => {
+  handleChange = changeObject => {
     this.setState({
-      error: changeObj.error,
-      empty: changeObj.empty,
-      brand: changeObj.brand,
-      brandIcon: this.mapBrandIcon(changeObj.brand)
+      error: changeObject.error,
+      empty: changeObject.empty,
+      brandIcon: this.mapBrandIcon(changeObject.brand),
     });
   };
 
@@ -78,7 +90,12 @@ class StripeElementWrapper extends PureComponent {
     return (
       <div className={c.root}>
         <FormControl fullWidth margin="normal" variant="outlined">
-          <InputLabel focused={focused} shrink={focused || !empty} error={!!error || (empty && showError)} variant="outlined">
+          <InputLabel
+            focused={focused}
+            shrink={focused || !empty}
+            error={!!error || (empty && showError)}
+            variant="outlined"
+          >
             {label}
           </InputLabel>
           <OutlinedInput
@@ -97,7 +114,7 @@ class StripeElementWrapper extends PureComponent {
               showBrandIcon && (
                 <InputAdornment position="start">
                   <span className={c.brandIcon}>
-                    <i className={['pf', brandIcon].join(' ')}></i>
+                    <i className={['pf', brandIcon].join(' ')} />
                   </span>
                 </InputAdornment>
               )
@@ -109,5 +126,18 @@ class StripeElementWrapper extends PureComponent {
     );
   }
 }
+
+StripeElementWrapper.defaultProps = {
+  brandIcon: false,
+  classes: {},
+  labelWidth: 0,
+  placeholder: '',
+  showError: false,
+};
+
+StripeElementWrapper.propTypes = {
+  component: PropTypes.func.isRequired,
+  label: PropTypes.string.isRequired,
+};
 
 export default withStyles(styles, { withTheme: true })(StripeElementWrapper);

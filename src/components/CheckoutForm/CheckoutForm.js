@@ -1,28 +1,26 @@
 // @flow
 
-import React, { Component } from 'react';
-import { CardElement, injectStripe, InjectedProps } from 'react-stripe-elements';
 import {
-  FormControlLabel,
+  Box,
+  Button,
   Checkbox,
   Divider,
-  Link,
-  Typography,
-  Button,
+  FormControlLabel,
   Grid,
+  Link,
   Paper,
   TextField,
-  Container,
-  Box,
-  Card,
-  CardContent
+  Typography,
 } from '@material-ui/core';
 import { withStyles } from '@material-ui/core/styles';
-import StripeCardsSection from '../../components/StripeCardsSection';
+import React, { Component } from 'react';
+import { InjectedProps, injectStripe } from 'react-stripe-elements';
 import validate from 'validate.js';
-import constraints from '../../services/validation/constraints';
 
-type Props = InjectedProps & {};
+import constraints from '../../services/validation/constraints';
+import StripeCardsSection from '../StripeCardsSection';
+
+type Properties = InjectedProps & {};
 
 type State = {
   emailAddress: string,
@@ -34,78 +32,83 @@ type State = {
   performingAction: boolean,
   complete: boolean,
   errors: Object,
-  showErrors: boolean
+  showErrors: boolean,
 };
 
 const styles = theme => ({
   root: {
     width: 500,
     marginTop: theme.spacing(3),
-    marginBottom: theme.spacing(8)
+    marginBottom: theme.spacing(8),
   },
   logo: {
-    width: 150
+    width: 150,
   },
   paper: {
-    padding: theme.spacing(3)
+    padding: theme.spacing(3),
   },
   grid: {
-    marginBottom: theme.spacing(2)
+    marginBottom: theme.spacing(2),
   },
   gridPayment: {
-    marginTop: theme.spacing(2)
+    marginTop: theme.spacing(2),
   },
   register: {
     marginBottom: theme.spacing(3),
-    padding: theme.spacing(2)
+    padding: theme.spacing(2),
   },
   link: {
-    fontWeight: 'bold'
-  }
+    fontWeight: 'bold',
+  },
 });
 
-class CheckoutForm extends Component<Props, State> {
-  state = {
-    emailAddress: '',
-    fullName: '',
-    password: '',
-    passwordConfirmation: '',
-    agreeMarketing: false,
+class CheckoutForm extends Component<Properties, State> {
+  constructor() {
+    super();
 
-    performingAction: false,
-    complete: false,
-    errors: null,
-    showErrors: false
-  };
+    this.state = {
+      emailAddress: '',
+      fullName: '',
+      password: '',
+      passwordConfirmation: '',
+      agreeMarketing: false,
 
-  handlePurchaseClick = ev => {
+      performingAction: false,
+      complete: false,
+      errors: null,
+      showErrors: false,
+    };
+  }
+
+  handlePurchaseClick = () => {
     const errors = this.validateForm();
 
     if (errors) {
       this.setState({
-        errors: errors,
-        showErrors: true
+        errors,
+        showErrors: true,
       });
     } else {
       this.setState(
         {
           performingAction: true,
           errors: null,
-          showErrors: true
+          showErrors: true,
         },
         async () => {
-          let { token } = await this.props.stripe.createToken({ name: 'Name' });
+          const { stripe } = this.props;
+          const { token } = await stripe.createToken({ name: 'Name' });
           console.log('stripe token issued', token);
           // todo: submit to VHX registration API
           this.setState({ complete: true });
-        }
+        },
       );
     }
   };
 
   handleFieldChange = fieldName => event => {
     const { showErrors } = this.state;
-    const value = event.target.value;
+    const { value } = event.target;
     this.setState({ [fieldName]: value }, () => {
       if (showErrors) {
         this.validateField(fieldName, value);
@@ -128,19 +131,19 @@ class CheckoutForm extends Component<Props, State> {
 
     const errors = validate(
       {
-        fullName: fullName,
-        emailAddress: emailAddress,
-        password: password,
-        passwordConfirmation: passwordConfirmation,
-        agreeMarketing: agreeMarketing
+        fullName,
+        emailAddress,
+        password,
+        passwordConfirmation,
+        agreeMarketing,
       },
       {
         fullName: constraints.fullName,
         emailAddress: constraints.emailAddress,
         password: constraints.password,
         passwordConfirmation: constraints.passwordConfirmation,
-        agreeMarketing: constraints.agreeMarketing
-      }
+        agreeMarketing: constraints.agreeMarketing,
+      },
     );
 
     return errors;
@@ -149,29 +152,29 @@ class CheckoutForm extends Component<Props, State> {
   validateField = (fieldName, fieldValue) => {
     switch (fieldName) {
       case 'password':
-      case 'passwordConfirmation':
+      case 'passwordConfirmation': {
         const { errors, password, passwordConfirmation } = this.state;
         const newErrors =
           validate(
-            { password: password, passwordConfirmation: passwordConfirmation },
+            { password, passwordConfirmation },
             {
               password: constraints.password,
-              passwordConfirmation: constraints.passwordConfirmation
-            }
+              passwordConfirmation: constraints.passwordConfirmation,
+            },
           ) || {};
         this.setState({
           errors: {
             ...errors,
             password: newErrors.password,
-            passwordConfirmation: newErrors.passwordConfirmation
-          }
+            passwordConfirmation: newErrors.passwordConfirmation,
+          },
         });
         return;
+      }
       default: {
         const { errors } = this.state;
         const newErrors = validate({ [fieldName]: fieldValue }, { [fieldName]: constraints[fieldName] }) || {};
         this.setState({ errors: { ...errors, [fieldName]: newErrors[fieldName] } });
-        return;
       }
     }
   };
@@ -190,7 +193,7 @@ class CheckoutForm extends Component<Props, State> {
       agreeMarketing,
 
       errors,
-      showErrors
+      showErrors,
     } = this.state;
 
     if (complete) {
@@ -200,7 +203,7 @@ class CheckoutForm extends Component<Props, State> {
     return (
       <form className={c.root}>
         <Box my={2}>
-          <img src="/BTV_Logo_White300px.png" className={c.logo} />
+          <img src="/BTV_Logo_White300px.png" className={c.logo} alt="logo" />
         </Box>
         <Paper className={c.paper} elevation={3}>
           <Box mt={1} mb={4} align="center">
@@ -219,7 +222,7 @@ class CheckoutForm extends Component<Props, State> {
                 type="email"
                 value={emailAddress}
                 variant="outlined"
-              ></TextField>
+              />
             </Grid>
             <Grid item className={c.grid}>
               <TextField
@@ -235,7 +238,7 @@ class CheckoutForm extends Component<Props, State> {
                 type="password"
                 value={password}
                 variant="outlined"
-              ></TextField>
+              />
             </Grid>
             <Grid item className={c.grid}>
               <TextField
@@ -251,7 +254,7 @@ class CheckoutForm extends Component<Props, State> {
                 type="password"
                 value={passwordConfirmation}
                 variant="outlined"
-              ></TextField>
+              />
             </Grid>
             <Grid item className={c.grid}>
               <FormControlLabel
@@ -289,18 +292,19 @@ class CheckoutForm extends Component<Props, State> {
                   type="text"
                   value={fullName}
                   variant="outlined"
-                ></TextField>
+                />
               </Grid>
               <Grid item className={c.grid}>
-                <StripeCardsSection showError={showErrors}></StripeCardsSection>
+                <StripeCardsSection showError={showErrors} />
               </Grid>
               <Grid item className={c.grid}>
                 <Divider variant="middle" />
               </Grid>
               <Grid item className={c.grid}>
                 <Typography color="textSecondary" variant="body2">
-                  We will place a $1 authorization hold on your card, which will convert to a $192 USD (plus any tax) recurring yearly
-                  payment unless you cancel before your 7-day trial ends. Charges on your card will appear as brillianttv.
+                  We will place a $1 authorization hold on your card, which will convert to a $192 USD (plus any tax)
+                  recurring yearly payment unless you cancel before your 7-day trial ends. Charges on your card will
+                  appear as brillianttv.
                 </Typography>
               </Grid>
             </Grid>

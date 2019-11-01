@@ -13,7 +13,9 @@
     "prettier",
     "jest",
     "flowtype",
-    "unicorn"
+    "unicorn",
+    "autofix",
+    "simple-import-sort"
   ],
   "parserOptions": {
     "sourceType": "module",
@@ -33,6 +35,11 @@
   },
   "rules": {
     "react/jsx-filename-extension": "off",
-    "unicorn/filename-case": "off"
+    "unicorn/filename-case": "off",
+    "unicorn/prevent-abbreviations": "off",
+    "no-param-reassign": "off",
+    "react/forbid-prop-types": "off",
+    "autofix/no-unused-vars": "error",
+    "simple-import-sort/sort": "error"
   }
 }

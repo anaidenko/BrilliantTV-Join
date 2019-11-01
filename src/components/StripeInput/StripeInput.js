@@ -3,36 +3,23 @@
 // Wrapper around the actual Stripe <*Element>, so that it can be used as `inputComponent`
 // for Material UI's <Input>. Also adds some styling.
 
-import React, { PureComponent } from 'react';
+import { withStyles } from '@material-ui/core';
 import PropTypes from 'prop-types';
-
-import { withStyles } from '@material-ui/styles';
+import React, { PureComponent } from 'react';
 
 const styles = () => ({
   root: {
     width: '100%',
-    cursor: 'text'
-  }
+    cursor: 'text',
+  },
 });
 
-class StripeInput extends PureComponent {
-  static displayName = 'StripeInput';
+type Props = {
+  inputRef?: Function,
+  placeholder?: string,
+};
 
-  static propTypes = {
-    classes: PropTypes.object.isRequired,
-    theme: PropTypes.object.isRequired,
-    component: PropTypes.func.isRequired,
-    onBlur: PropTypes.func,
-    onFocus: PropTypes.func,
-    onChange: PropTypes.func
-  };
-
-  static defaultProps = {
-    onFocus: () => {},
-    onBlur: () => {},
-    onChange: () => {}
-  };
-
+class StripeInput extends PureComponent<Props> {
   render() {
     const { inputRef, classes: c, theme, component: Component, onFocus, onBlur, onChange, placeholder } = this.props;
 
@@ -42,20 +29,37 @@ class StripeInput extends PureComponent {
         onFocus={onFocus}
         onBlur={onBlur}
         onChange={onChange}
-        placeholder={placeholder || ''}
-        ref={ref => {
-          inputRef(ref ? ref.getElement() : null);
+        placeholder={placeholder}
+        ref={reference => {
+          inputRef(reference ? reference.getElement() : null);
         }}
         style={{
           base: {
             fontSize: `${theme.typography.fontSize}px`,
             fontFamily: theme.typography.fontFamily,
-            color: '#000000de'
-          }
+            color: '#000000de',
+          },
         }}
       />
     );
   }
 }
+
+StripeInput.defaultProps = {
+  inputRef: () => {},
+  onBlur: () => {},
+  onChange: () => {},
+  onFocus: () => {},
+  placeholder: '',
+};
+
+StripeInput.propTypes = {
+  classes: PropTypes.object.isRequired,
+  theme: PropTypes.object.isRequired,
+  component: PropTypes.func.isRequired,
+  onBlur: PropTypes.func,
+  onFocus: PropTypes.func,
+  onChange: PropTypes.func,
+};
 
 export default withStyles(styles, { withTheme: true })(StripeInput);

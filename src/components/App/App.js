@@ -1,20 +1,22 @@
 // @flow
 
-import React from 'react';
 import './App.css';
 import 'paymentfont/css/paymentfont.css';
-import CheckoutForm from '../../components/CheckoutForm/CheckoutForm';
-import { Elements, StripeProvider } from 'react-stripe-elements';
+
 import { createMuiTheme, ThemeProvider } from '@material-ui/core';
-import { green, blue, teal } from '@material-ui/core/colors';
+import { blue, teal } from '@material-ui/core/colors';
+import React from 'react';
+import { Elements, StripeProvider } from 'react-stripe-elements';
+
+import CheckoutForm from '../CheckoutForm/CheckoutForm';
 
 const theme = createMuiTheme({
   palette: {
     primary: blue,
     secondary: {
-      main: teal[500]
-    }
-  }
+      main: teal[500],
+    },
+  },
 });
 
 function App() {
@@ -24,7 +26,7 @@ function App() {
         <header className="App-header">
           <StripeProvider apiKey="pk_test_TYooMQauvdEDq54NiTphI7jx">
             <Elements>
-              <CheckoutForm></CheckoutForm>
+              <CheckoutForm />
             </Elements>
           </StripeProvider>
         </header>
