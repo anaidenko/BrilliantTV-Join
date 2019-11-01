@@ -34,7 +34,7 @@ class StripeInput extends PureComponent {
   };
 
   render() {
-    const { inputRef, classes: c, theme, component: Component, onFocus, onBlur, onChange } = this.props;
+    const { inputRef, classes: c, theme, component: Component, onFocus, onBlur, onChange, placeholder } = this.props;
 
     return (
       <Component
@@ -42,7 +42,7 @@ class StripeInput extends PureComponent {
         onFocus={onFocus}
         onBlur={onBlur}
         onChange={onChange}
-        placeholder=""
+        placeholder={placeholder || ''}
         ref={ref => {
           inputRef(ref ? ref.getElement() : null);
         }}

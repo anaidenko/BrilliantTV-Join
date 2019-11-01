@@ -23,18 +23,25 @@ class StripeCardsSection extends PureComponent {
   static displayName = 'StripeCardsSection';
 
   render() {
-    const { classes: c } = this.props;
+    const { classes: c, showError } = this.props;
 
     return (
       <Grid container className={c.root}>
         <Grid item xs className={c.grid}>
-          <StripeElementWrapper label="Card Number" labelWidth={95} component={CardNumberElement} brandIcon />
+          <StripeElementWrapper
+            label="Card number"
+            labelWidth={95}
+            placeholder="0000 0000 0000 0000"
+            component={CardNumberElement}
+            brandIcon
+            showError={showError}
+          />
         </Grid>
         <Grid item xs={4} className={c.grid}>
-          <StripeElementWrapper label="Expiry (MM / YY)" labelWidth={120} component={CardExpiryElement} />
+          <StripeElementWrapper label="Expiry" labelWidth={40} placeholder="MM / YY" component={CardExpiryElement} showError={showError} />
         </Grid>
         <Grid item xs={2} className={c.grid}>
-          <StripeElementWrapper label="CVC" labelWidth={30} component={CardCVCElement} />
+          <StripeElementWrapper label="CVC" labelWidth={30} placeholder="000" component={CardCVCElement} showError={showError} />
         </Grid>
       </Grid>
     );

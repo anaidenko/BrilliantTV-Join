@@ -6,8 +6,16 @@ import 'paymentfont/css/paymentfont.css';
 import CheckoutForm from '../../components/CheckoutForm/CheckoutForm';
 import { Elements, StripeProvider } from 'react-stripe-elements';
 import { createMuiTheme, ThemeProvider } from '@material-ui/core';
+import { green, blue, teal } from '@material-ui/core/colors';
 
-const theme = createMuiTheme({});
+const theme = createMuiTheme({
+  palette: {
+    primary: blue,
+    secondary: {
+      main: teal[500]
+    }
+  }
+});
 
 function App() {
   return (

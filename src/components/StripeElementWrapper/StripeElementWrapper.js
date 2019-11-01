@@ -72,26 +72,27 @@ class StripeElementWrapper extends PureComponent {
   };
 
   render() {
-    const { component, label, brandIcon: showBrandIcon, labelWidth, classes: c } = this.props;
+    const { component, label, brandIcon: showBrandIcon, labelWidth, classes: c, showError, placeholder } = this.props;
     const { focused, empty, error, brandIcon } = this.state;
 
     return (
       <div className={c.root}>
         <FormControl fullWidth margin="normal" variant="outlined">
-          <InputLabel focused={focused} shrink={focused || !empty} error={!!error} variant="outlined">
+          <InputLabel focused={focused} shrink={focused || !empty} error={!!error || (empty && showError)} variant="outlined">
             {label}
           </InputLabel>
           <OutlinedInput
-            fullWidth
-            notched={focused || !empty}
             className={c.input}
+            error={!!error || (empty && showError)}
+            fullWidth
             inputComponent={StripeInput}
-            onFocus={this.handleFocus}
+            inputProps={{ component }}
+            labelWidth={labelWidth}
+            notched={focused || !empty}
             onBlur={this.handleBlur}
             onChange={this.handleChange}
-            labelWidth={labelWidth}
-            inputProps={{ component }}
-            disableUnderline
+            onFocus={this.handleFocus}
+            placeholder={focused ? placeholder : ''}
             endAdornment={
               showBrandIcon && (
                 <InputAdornment position="start">
