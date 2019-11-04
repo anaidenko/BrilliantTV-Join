@@ -8,6 +8,7 @@ import { blue, teal } from '@material-ui/core/colors';
 import React from 'react';
 import { Elements, StripeProvider } from 'react-stripe-elements';
 
+import environment from '../../config/environment';
 import CheckoutForm from '../CheckoutForm/CheckoutForm';
 
 const theme = createMuiTheme({
@@ -24,7 +25,7 @@ function App() {
     <div className="App">
       <ThemeProvider theme={theme}>
         <header className="App-header">
-          <StripeProvider apiKey="pk_test_TYooMQauvdEDq54NiTphI7jx">
+          <StripeProvider apiKey={environment.STRIPE_PUBLISHABLE_KEY}>
             <Elements>
               <CheckoutForm />
             </Elements>

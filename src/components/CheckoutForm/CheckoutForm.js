@@ -17,25 +17,28 @@ import React, { Component } from 'react';
 import { InjectedProps, injectStripe } from 'react-stripe-elements';
 import validate from 'validate.js';
 
+import environment from '../../config/environment';
 import constraints from '../../services/validation/constraints';
+import FeedbackSnackbarContent from '../FeedbackSnackbarContent';
 import StripeCardsSection from '../StripeCardsSection';
 
-type Properties = InjectedProps & {};
+type Props = InjectedProps & {};
 
 type State = {
   emailAddress: string,
   fullName: string,
   password: string,
   passwordConfirmation: string,
-  agreeMarketing: boolean,
+  marketingOptIn: boolean,
 
   performingAction: boolean,
   complete: boolean,
   errors: Object,
+  serverError: string,
   showErrors: boolean,
 };
 
-const styles = theme => ({
+const styles = (theme) => ({
   root: {
     width: 500,
     marginTop: theme.spacing(3),
@@ -60,9 +63,12 @@ const styles = theme => ({
   link: {
     fontWeight: 'bold',
   },
+  login: {
+    marginTop: theme.spacing(3),
+  },
 });
 
-class CheckoutForm extends Component<Properties, State> {
+class CheckoutForm extends Component<Props, State> {
   constructor() {
     super();
 
@@ -71,11 +77,12 @@ class CheckoutForm extends Component<Properties, State> {
       fullName: '',
       password: '',
       passwordConfirmation: '',
-      agreeMarketing: false,
+      marketingOptIn: false,
 
       performingAction: false,
       complete: false,
       errors: null,
+      serverError: '',
       showErrors: false,
     };
   }
@@ -93,20 +100,50 @@ class CheckoutForm extends Component<Properties, State> {
         {
           performingAction: true,
           errors: null,
+          serverError: '',
           showErrors: true,
         },
         async () => {
           const { stripe } = this.props;
-          const { token } = await stripe.createToken({ name: 'Name' });
-          console.log('stripe token issued', token);
-          // todo: submit to VHX registration API
-          this.setState({ complete: true });
+          const { fullName, emailAddress, password, marketingOptIn } = this.state;
+          const { token } = await stripe.createToken({ name: fullName });
+
+          if (!token) {
+            this.setState({ performingAction: false });
+            return;
+          }
+
+          const metadata = {
+            stripeToken: token.id,
+            name: fullName,
+            email: emailAddress,
+            password,
+            marketingOptIn,
+          };
+          const response = await fetch(`${environment.REACT_APP_BACKEND_URL}/signup`, {
+            method: 'POST',
+            headers: {
+              Accept: 'application/json',
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(metadata),
+          });
+          if (response.ok) {
+            const content = await response.json();
+            console.log('Signup Succeed', content);
+            this.setState({ complete: true, performingAction: false });
+          } else {
+            const content = await response.json();
+            const error = (content && content.message) || response.statusText;
+            console.error('Signup Error', error);
+            this.setState({ performingAction: false, serverError: error });
+          }
         },
       );
     }
   };
 
-  handleFieldChange = fieldName => event => {
+  handleFieldChange = (fieldName) => (event) => {
     const { showErrors } = this.state;
     const { value } = event.target;
     this.setState({ [fieldName]: value }, () => {
@@ -116,7 +153,7 @@ class CheckoutForm extends Component<Properties, State> {
     });
   };
 
-  handleFieldCheck = fieldName => event => {
+  handleFieldCheck = (fieldName) => (event) => {
     const { showErrors } = this.state;
     const value = event.target.checked;
     this.setState({ [fieldName]: value }, () => {
@@ -127,7 +164,7 @@ class CheckoutForm extends Component<Properties, State> {
   };
 
   validateForm = () => {
-    const { fullName, emailAddress, password, passwordConfirmation, agreeMarketing } = this.state;
+    const { fullName, emailAddress, password, passwordConfirmation, marketingOptIn } = this.state;
 
     const errors = validate(
       {
@@ -135,14 +172,14 @@ class CheckoutForm extends Component<Properties, State> {
         emailAddress,
         password,
         passwordConfirmation,
-        agreeMarketing,
+        marketingOptIn,
       },
       {
         fullName: constraints.fullName,
         emailAddress: constraints.emailAddress,
         password: constraints.password,
         passwordConfirmation: constraints.passwordConfirmation,
-        agreeMarketing: constraints.agreeMarketing,
+        marketingOptIn: constraints.marketingOptIn,
       },
     );
 
@@ -179,6 +216,10 @@ class CheckoutForm extends Component<Properties, State> {
     }
   };
 
+  handleFeedbackClose = () => {
+    this.setState({ serverError: '' });
+  };
+
   render() {
     const { classes: c } = this.props;
 
@@ -190,19 +231,34 @@ class CheckoutForm extends Component<Properties, State> {
       emailAddress,
       password,
       passwordConfirmation,
-      agreeMarketing,
+      marketingOptIn,
 
       errors,
+      serverError,
       showErrors,
     } = this.state;
 
     if (complete) {
-      return <h1>Purchase Complete</h1>;
+      return (
+        <form className={c.root}>
+          <Typography variant="h3">Registration Complete</Typography>
+
+          <Button
+            className={c.login}
+            color="secondary"
+            href={`${environment.VHX_PORTAL_URL}/login`}
+            size="large"
+            variant="contained"
+          >
+            Go to Login
+          </Button>
+        </form>
+      );
     }
 
     return (
       <form className={c.root}>
-        <Box my={2}>
+        <Box mb={3}>
           <img src="/BTV_Logo_White300px.png" className={c.logo} alt="logo" />
         </Box>
         <Paper className={c.paper} elevation={3}>
@@ -258,12 +314,13 @@ class CheckoutForm extends Component<Properties, State> {
             </Grid>
             <Grid item className={c.grid}>
               <FormControlLabel
+                disabled={performingAction}
                 control={
                   <Checkbox
-                    checked={agreeMarketing}
-                    value="agreeMarketing"
+                    checked={marketingOptIn}
+                    value="marketingOptIn"
                     color="secondary"
-                    onChange={this.handleFieldCheck('agreeMarketing')}
+                    onChange={this.handleFieldCheck('marketingOptIn')}
                   />
                 }
                 label={
@@ -309,6 +366,12 @@ class CheckoutForm extends Component<Properties, State> {
               </Grid>
             </Grid>
           </Grid>
+
+          {serverError && (
+            <Box my={2}>
+              <FeedbackSnackbarContent variant="error" message={serverError} onClose={this.handleFeedbackClose} />
+            </Box>
+          )}
 
           <Button
             className={c.register}

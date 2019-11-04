@@ -15,8 +15,14 @@ const styles = () => ({
 });
 
 type Props = {
+  classes?: Object,
+  theme?: Object,
   inputRef?: Function,
   placeholder?: string,
+  component: Object,
+  onFocus: Function,
+  onBlur: Function,
+  onChange: Function,
 };
 
 class StripeInput extends PureComponent<Props> {
@@ -30,7 +36,7 @@ class StripeInput extends PureComponent<Props> {
         onBlur={onBlur}
         onChange={onChange}
         placeholder={placeholder}
-        ref={reference => {
+        ref={(reference) => {
           inputRef(reference ? reference.getElement() : null);
         }}
         style={{

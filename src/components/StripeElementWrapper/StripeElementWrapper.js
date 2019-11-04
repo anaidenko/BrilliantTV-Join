@@ -67,7 +67,7 @@ class StripeElementWrapper extends PureComponent<Props, State> {
     this.setState({ focused: true });
   };
 
-  handleChange = changeObject => {
+  handleChange = (changeObject) => {
     this.setState({
       error: changeObject.error,
       empty: changeObject.empty,
@@ -75,7 +75,7 @@ class StripeElementWrapper extends PureComponent<Props, State> {
     });
   };
 
-  mapBrandIcon = brand => {
+  mapBrandIcon = (brand) => {
     let pfClass = 'pf-credit-card';
     if (brand in cardBrandToPfClass) {
       pfClass = cardBrandToPfClass[brand];

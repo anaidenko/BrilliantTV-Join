@@ -6,7 +6,7 @@ import { CardCVCElement, CardExpiryElement, CardNumberElement } from 'react-stri
 
 import StripeElementWrapper from '../StripeElementWrapper';
 
-const styles = theme => ({
+const styles = (theme) => ({
   root: {
     flexWrap: 'nowrap',
   },
