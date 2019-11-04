@@ -68,13 +68,17 @@ router.post('/signup', async (req, res) => {
       name: metadata.name,
       source: metadata.stripeToken,
     });
-    console.log('Stripe customer created', stripeCustomer);
+    if (process.env.DEBUG === 'true') {
+      console.log('Stripe customer created', stripeCustomer);
+    }
 
     const vhxCustomer = await util.promisify(vhx.customers.create)({
       email: metadata.email,
       name: metadata.name,
     });
-    console.log('VHX customer created', vhxCustomer);
+    if (process.env.DEBUG === 'true') {
+      console.log('VHX customer created', vhxCustomer);
+    }
 
     if (process.env.VHX_REGISTER === 'true') {
       const vhxUser = await axios.post(`${process.env.VHX_PORTAL_URL}/registration.json`, {
@@ -88,7 +92,9 @@ router.post('/signup', async (req, res) => {
         send_email: 0,
         v2_checkout: true,
       });
-      console.log('VHX user registered', vhxUser);
+      if (process.env.DEBUG === 'true') {
+        console.log('VHX user registered', vhxUser);
+      }
     }
 
     const subscription = await stripe.subscriptions.create({
@@ -96,7 +102,9 @@ router.post('/signup', async (req, res) => {
       collection_method: 'charge_automatically',
       items: [{ plan: process.env.STRIPE_SUBSCRIPTION_PLAN_ID }],
     });
-    console.log('Stripe subscription created', subscription);
+    if (process.env.DEBUG === 'true') {
+      console.log('Stripe subscription created', subscription);
+    }
 
     console.log('Signup complete', { ...metadata, password: null }); // cloak password
 
