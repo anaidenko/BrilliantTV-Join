@@ -34,7 +34,13 @@ router.post('/signup', async (req, res) => {
     password: body.password,
     stripeToken: body.stripeToken,
     marketingOptIn: body.marketingOptIn,
+    product: process.env.VHX_PRODUCT,
+    plan: body.plan || 'yearly',
   };
+
+  if (metadata.plan === 'annual') {
+    metadata.plan = 'yearly'; // configured on VHX side
+  }
 
   // validate
   if (!metadata.email) {
@@ -48,6 +54,9 @@ router.post('/signup', async (req, res) => {
   }
   if (!metadata.stripeToken) {
     throw createError(400, 'Stripe token missing');
+  }
+  if (!['yearly', 'monthly'].includes(metadata.plan)) {
+    throw createError(400, 'yearly or monthly plan expected');
   }
 
   console.log('Signup requested', { ...metadata, password: null }); // cloak password
@@ -63,52 +72,66 @@ router.post('/signup', async (req, res) => {
   }
 
   try {
-    const stripeCustomer = await stripe.customers.create({
+    let stripeCustomer = null;
+    const stripeCustomerMetadata = {
       email: metadata.email,
       name: metadata.name,
       source: metadata.stripeToken,
-    });
-    if (process.env.DEBUG === 'true') {
-      console.log('Stripe customer created', stripeCustomer);
-    }
-
-    const vhxCustomer = await util.promisify(vhx.customers.create)({
-      email: metadata.email,
-      name: metadata.name,
-    });
-    if (process.env.DEBUG === 'true') {
-      console.log('VHX customer created', vhxCustomer);
-    }
-
-    if (process.env.VHX_REGISTER === 'true') {
-      const vhxUser = await axios.post(`${process.env.VHX_PORTAL_URL}/registration.json`, {
-        email: metadata.email,
-        is_avod_registration: false,
-        marketing_opt_in: Boolean(metadata.marketingOptIn || false),
-        name: metadata.name,
-        password: metadata.password,
-        product_sku: process.env.VHX_PRODUCT_SKU,
-        product_type: process.env.VHX_PRODUCT_TYPE,
-        send_email: 0,
-        v2_checkout: true,
-      });
+      metadata: {
+        product: metadata.product,
+        plan: metadata.plan,
+      },
+    };
+    try {
+      stripeCustomer = await stripe.customers.create(stripeCustomerMetadata);
       if (process.env.DEBUG === 'true') {
-        console.log('VHX user registered', vhxUser);
+        console.log('Stripe customer created', stripeCustomer);
       }
+    } catch (err) {
+      console.error('Failed to create Stripe customer', stripeCustomerMetadata);
+      throw err;
     }
 
-    const subscription = await stripe.subscriptions.create({
+    let stripeSubscription = null;
+    const stripePlan =
+      metadata.plan === 'yearly'
+        ? process.env.STRIPE_SUBSCRIPTION_YEARLY_PLAN_ID
+        : process.env.STRIPE_SUBSCRIPTION_MONTHLY_PLAN_ID;
+    const stripeSubscriptionMetadata = {
       customer: stripeCustomer.id,
       collection_method: 'charge_automatically',
-      items: [{ plan: process.env.STRIPE_SUBSCRIPTION_PLAN_ID }],
-    });
-    if (process.env.DEBUG === 'true') {
-      console.log('Stripe subscription created', subscription);
+      items: [{ plan: stripePlan }],
+    };
+    try {
+      stripeSubscription = await stripe.subscriptions.create(stripeSubscriptionMetadata);
+      if (process.env.DEBUG === 'true') {
+        console.log('Stripe subscription created', stripeSubscription);
+      }
+    } catch (err) {
+      console.error('Failed to create Stripe subscription', stripeSubscriptionMetadata);
+      throw err;
+    }
+
+    let vhxCustomer = null;
+    const vhxCustomerMetadata = {
+      email: metadata.email,
+      name: metadata.name,
+      product: metadata.product,
+      plan: metadata.plan,
+    };
+    try {
+      vhxCustomer = await util.promisify(vhx.customers.create)(vhxCustomerMetadata);
+      if (process.env.DEBUG === 'true') {
+        console.log('VHX customer created', vhxCustomer);
+      }
+    } catch (err) {
+      console.error('Failed to create VHX customer', vhxCustomerMetadata);
+      throw err;
     }
 
     console.log('Signup complete', { ...metadata, password: null }); // cloak password
 
-    res.send({ ok: true, stripeCustomer, subscription, vhxCustomer });
+    res.send({ ok: true, stripeCustomer, stripeSubscription, vhxCustomer });
   } catch (err) {
     console.error('Error', err);
     throw createError(

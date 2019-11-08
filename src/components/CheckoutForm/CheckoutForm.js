@@ -30,6 +30,8 @@ type State = {
   password: string,
   passwordConfirmation: string,
   marketingOptIn: boolean,
+  plan: string,
+  price: number,
 
   performingAction: boolean,
   complete: boolean,
@@ -78,6 +80,8 @@ class CheckoutForm extends Component<Props, State> {
       password: '',
       passwordConfirmation: '',
       marketingOptIn: false,
+      plan: '',
+      price: 0,
 
       performingAction: false,
       complete: false,
@@ -85,6 +89,20 @@ class CheckoutForm extends Component<Props, State> {
       serverError: '',
       showErrors: false,
     };
+  }
+
+  componentDidMount() {
+    const {
+      match: { params },
+    } = this.props;
+
+    const plan = (params.plan || 'yearly').trim().toLowerCase();
+    const price = plan === 'monthly' ? 19.95 : 192;
+
+    this.setState({
+      plan,
+      price,
+    });
   }
 
   handlePurchaseClick = () => {
@@ -105,7 +123,7 @@ class CheckoutForm extends Component<Props, State> {
         },
         async () => {
           const { stripe } = this.props;
-          const { fullName, emailAddress, password, marketingOptIn } = this.state;
+          const { fullName, emailAddress, password, marketingOptIn, plan } = this.state;
           const { token } = await stripe.createToken({ name: fullName });
 
           if (!token) {
@@ -119,6 +137,7 @@ class CheckoutForm extends Component<Props, State> {
             email: emailAddress,
             password,
             marketingOptIn,
+            plan,
           };
           const response = await fetch(`${environment.REACT_APP_BACKEND_URL}/signup`, {
             method: 'POST',
@@ -232,6 +251,8 @@ class CheckoutForm extends Component<Props, State> {
       password,
       passwordConfirmation,
       marketingOptIn,
+      plan,
+      price,
 
       errors,
       serverError,
@@ -359,9 +380,9 @@ class CheckoutForm extends Component<Props, State> {
               </Grid>
               <Grid item className={c.grid}>
                 <Typography color="textSecondary" variant="body2">
-                  We will place a $1 authorization hold on your card, which will convert to a $192 USD (plus any tax)
-                  recurring yearly payment unless you cancel before your 7-day trial ends. Charges on your card will
-                  appear as brillianttv.
+                  We will place a $1 authorization hold on your card, which will convert to a ${price} USD (plus any
+                  tax) recurring {plan} payment unless you cancel before your 7-day trial ends. Charges on your card
+                  will appear as brillianttv.
                 </Typography>
               </Grid>
             </Grid>
