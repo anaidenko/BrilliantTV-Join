@@ -7,7 +7,7 @@ import App from './components/App';
 import { loadRemoteConfig } from './config/environment';
 import * as serviceWorker from './serviceWorker';
 
-loadRemoteConfig().finally(() => {
+loadRemoteConfig(window.location.pathname).finally(() => {
   ReactDOM.render(<App />, document.querySelector('#root'));
 });
 

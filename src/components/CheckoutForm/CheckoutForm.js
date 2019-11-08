@@ -32,6 +32,7 @@ type State = {
   marketingOptIn: boolean,
   plan: string,
   price: number,
+  trialDays: number,
 
   performingAction: boolean,
   complete: boolean,
@@ -82,6 +83,7 @@ class CheckoutForm extends Component<Props, State> {
       marketingOptIn: false,
       plan: '',
       price: 0,
+      trialDays: 0,
 
       performingAction: false,
       complete: false,
@@ -97,11 +99,13 @@ class CheckoutForm extends Component<Props, State> {
     } = this.props;
 
     const plan = (params.plan || 'yearly').trim().toLowerCase();
-    const price = plan === 'monthly' ? 19.95 : 192;
+    const price = environment.plan.amount / 100;
+    const trialDays = environment.plan.trial_period_days;
 
     this.setState({
       plan,
       price,
+      trialDays,
     });
   }
 
@@ -253,6 +257,7 @@ class CheckoutForm extends Component<Props, State> {
       marketingOptIn,
       plan,
       price,
+      trialDays,
 
       errors,
       serverError,
@@ -284,7 +289,7 @@ class CheckoutForm extends Component<Props, State> {
         </Box>
         <Paper className={c.paper} elevation={3}>
           <Box mt={1} mb={4} align="center">
-            <Typography variant="h5">Start your 7-day free trial</Typography>
+            <Typography variant="h5">Start your {trialDays}-day free trial</Typography>
           </Box>
           <Grid container direction="column">
             <Grid item className={c.grid}>
@@ -381,8 +386,8 @@ class CheckoutForm extends Component<Props, State> {
               <Grid item className={c.grid}>
                 <Typography color="textSecondary" variant="body2">
                   We will place a $1 authorization hold on your card, which will convert to a ${price} USD (plus any
-                  tax) recurring {plan} payment unless you cancel before your 7-day trial ends. Charges on your card
-                  will appear as brillianttv.
+                  tax) recurring {plan} payment unless you cancel before your {trialDays}-day trial ends. Charges on
+                  your card will appear as brillianttv.
                 </Typography>
               </Grid>
             </Grid>

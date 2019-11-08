@@ -2,8 +2,11 @@ const localConfig = {
   ...process.env,
 };
 
-export async function loadRemoteConfig() {
-  const response = await fetch(`${process.env.REACT_APP_BACKEND_URL || ''}/config`, {
+const backendUrl = process.env.REACT_APP_BACKEND_URL || '';
+
+export async function loadRemoteConfig(route) {
+  const plan = route && route !== '/' ? route.split('/')[1] : 'yearly';
+  const response = await fetch(`${backendUrl}/config/${plan}`, {
     method: 'GET',
     headers: {
       Accept: 'application/json',
