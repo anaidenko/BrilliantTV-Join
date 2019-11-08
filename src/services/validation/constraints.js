@@ -39,6 +39,7 @@ const constraints = {
   password: {
     length: {
       minimum: 6,
+      maximum: 100,
     },
 
     presence: {
@@ -53,6 +54,7 @@ const constraints = {
 
     length: {
       minimum: 6,
+      maximum: 100,
     },
 
     presence: {

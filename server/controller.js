@@ -92,6 +92,7 @@ exports.signup = async function(metadata) {
     name: metadata.name,
     product: metadata.product,
     plan: metadata.plan,
+    password: metadata.password,
   };
 
   try {

@@ -19,9 +19,6 @@ exports.parseSignupMetadata = (req, res, next) => {
   if (!metadata.name) {
     throw createError(400, 'Name missing');
   }
-  if (!metadata.password) {
-    throw createError(400, 'Password missing');
-  }
   if (!metadata.stripeToken) {
     throw createError(400, 'Stripe token missing');
   }
