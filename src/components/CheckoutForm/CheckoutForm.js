@@ -155,6 +155,7 @@ class CheckoutForm extends Component<Props, State> {
             const content = await response.json();
             console.log('Signup Succeed', content);
             this.setState({ complete: true, performingAction: false });
+            window.location = 'https://subscribe.brillianttv.com/welcome';
           } else {
             const content = await response.json();
             const error = (content && content.message) || response.statusText;
@@ -265,21 +266,22 @@ class CheckoutForm extends Component<Props, State> {
     } = this.state;
 
     if (complete) {
-      return (
-        <form className={c.root}>
-          <Typography variant="h3">Registration Complete</Typography>
+      return <></>;
+      //   return (
+      //     <form className={c.root}>
+      //       <Typography variant="h3">Registration Complete</Typography>
 
-          <Button
-            className={c.login}
-            color="secondary"
-            href={`${environment.VHX_PORTAL_URL}/login`}
-            size="large"
-            variant="contained"
-          >
-            Go to Login
-          </Button>
-        </form>
-      );
+      //       <Button
+      //         className={c.login}
+      //         color="secondary"
+      //         href={`${environment.VHX_PORTAL_URL}/login`}
+      //         size="large"
+      //         variant="contained"
+      //       >
+      //         Go to Login
+      //       </Button>
+      //     </form>
+      //   );
     }
 
     return (
