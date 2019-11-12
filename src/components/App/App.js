@@ -4,21 +4,30 @@ import './App.css';
 import 'paymentfont/css/paymentfont.css';
 
 import { createMuiTheme, ThemeProvider } from '@material-ui/core';
-import { blue, teal } from '@material-ui/core/colors';
+import { teal } from '@material-ui/core/colors';
 import React from 'react';
 import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
-import { Elements, StripeProvider } from 'react-stripe-elements';
 
-import environment from '../../config/environment';
-import CheckoutForm from '../CheckoutForm';
-import NoMatch from '../NoMatch';
+import NoMatchPage from '../../pages/NoMatchPage';
+import SignupPage from '../../pages/SignupPage';
 
 const theme = createMuiTheme({
   palette: {
-    primary: blue,
+    // primary: blue,
+    primary: {
+      main: '#0464B0',
+    },
     secondary: {
       main: teal[500],
     },
+  },
+  typography: {
+    // fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
+    fontFamily: '"Montserrat", "Roboto", "Helvetica", "Arial", sans-serif',
+    fontSize: 13,
+    fontWeightLight: 400,
+    fontWeightRegular: 500,
+    fontWeightMedium: 600,
   },
 });
 
@@ -26,19 +35,13 @@ function App() {
   return (
     <div className="App">
       <ThemeProvider theme={theme}>
-        <header className="App-header">
-          <StripeProvider apiKey={environment.STRIPE_PUBLISHABLE_KEY}>
-            <Elements>
-              <Router>
-                <Switch>
-                  <Route path="/:plan(annual|yearly|monthly)" component={CheckoutForm} />
-                  <Route path="/" exact component={CheckoutForm} />
-                  <Route component={NoMatch} />
-                </Switch>
-              </Router>
-            </Elements>
-          </StripeProvider>
-        </header>
+        <Router>
+          <Switch>
+            <Route path="/:plan(annual|yearly|monthly)" component={SignupPage} />
+            <Route path="/" exact component={SignupPage} />
+            <Route component={NoMatchPage} />
+          </Switch>
+        </Router>
       </ThemeProvider>
     </div>
   );

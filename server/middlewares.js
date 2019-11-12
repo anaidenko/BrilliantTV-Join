@@ -7,7 +7,6 @@ exports.parseSignupMetadata = (req, res, next) => {
     name: body.name,
     password: body.password,
     stripeToken: body.stripeToken,
-    marketingOptIn: body.marketingOptIn,
     product: process.env.VHX_PRODUCT,
     plan: body.plan || 'yearly',
   };

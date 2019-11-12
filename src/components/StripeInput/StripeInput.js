@@ -15,8 +15,7 @@ const styles = () => ({
 });
 
 type Props = {
-  classes?: Object,
-  theme?: Object,
+  classes: Object,
   inputRef?: Function,
   placeholder?: string,
   component: Object,
@@ -27,7 +26,7 @@ type Props = {
 
 class StripeInput extends PureComponent<Props> {
   render() {
-    const { inputRef, classes: c, theme, component: Component, onFocus, onBlur, onChange, placeholder } = this.props;
+    const { inputRef, classes: c, component: Component, onFocus, onBlur, onChange, placeholder } = this.props;
 
     return (
       <Component
@@ -41,8 +40,10 @@ class StripeInput extends PureComponent<Props> {
         }}
         style={{
           base: {
-            fontSize: `${theme.typography.fontSize}px`,
-            fontFamily: theme.typography.fontFamily,
+            // fontSize: `${theme.typography.fontSize}px`,
+            // fontFamily: theme.typography.fontFamily,
+            fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
+            fontSize: 16,
             color: '#000000de',
           },
         }}
@@ -61,7 +62,6 @@ StripeInput.defaultProps = {
 
 StripeInput.propTypes = {
   classes: PropTypes.object.isRequired,
-  theme: PropTypes.object.isRequired,
   component: PropTypes.func.isRequired,
   onBlur: PropTypes.func,
   onFocus: PropTypes.func,
