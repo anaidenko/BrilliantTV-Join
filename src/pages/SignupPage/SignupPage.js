@@ -69,7 +69,7 @@ function SignupPage(props) {
   return (
     <Box className={c.root}>
       {environment.INTERCOM_APP_ID && (
-        <Intercom appId={environment.INTERCOM_APP_ID} custom_launcher_selector=".intercom-launcher" />
+        <Intercom appID={environment.INTERCOM_APP_ID} custom_launcher_selector=".intercom-launcher" />
       )}
 
       <Grid container className={c.header} direction="row" wrap="nowrap" alignItems="center">

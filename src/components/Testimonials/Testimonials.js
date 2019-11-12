@@ -41,6 +41,7 @@ const styles = (theme) => ({
 
 type Props = {
   classes: Object,
+  width: number,
 };
 
 type State = {
@@ -100,7 +101,7 @@ class Testimonials extends Component<Props, State> {
     };
   }
 
-  getGridListCols(width) {
+  getGridListCols = (width) => {
     if (isWidthUp('lg', width)) {
       return 3;
     }
@@ -108,7 +109,7 @@ class Testimonials extends Component<Props, State> {
       return 2;
     }
     return 1;
-  }
+  };
 
   render() {
     const { classes: c, width } = this.props;
