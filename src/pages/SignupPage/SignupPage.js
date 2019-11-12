@@ -12,9 +12,12 @@ import environment from '../../config/environment';
 const styles = (theme) => ({
   root: {
     width: 910,
-    maxWidth: '98vw',
-    marginTop: theme.spacing(3),
-    marginBottom: theme.spacing(8),
+    maxWidth: '97vw',
+    margin: theme.spacing(1),
+    [theme.breakpoints.up('sm')]: {
+      marginTop: theme.spacing(3),
+      marginBottom: theme.spacing(8),
+    },
   },
   logo: {
     width: 147,
@@ -25,6 +28,9 @@ const styles = (theme) => ({
   paper: {
     padding: theme.spacing(3, 8),
     borderRadius: 0,
+    [theme.breakpoints.down('sm')]: {
+      padding: theme.spacing(3, 3),
+    },
   },
   testimonials: {
     marginTop: theme.spacing(6),
@@ -72,11 +78,20 @@ function SignupPage(props) {
         <Intercom appID={environment.INTERCOM_APP_ID} custom_launcher_selector=".intercom-launcher" />
       )}
 
-      <Grid container className={c.header} direction="row" wrap="nowrap" alignItems="center">
-        <Grid item align="left">
+      <Hidden smUp>
+        <Box mb={2}>
           <img src="/images/BTV_Logo_Dark.png" className={c.logo} alt="logo" />
-        </Grid>
-        <Grid item xs />
+        </Box>
+      </Hidden>
+
+      <Grid container className={c.header} direction="row" wrap="nowrap" alignItems="center" justify="center">
+        <Hidden only="xs">
+          <Grid item align="left">
+            <img src="/images/BTV_Logo_Dark.png" className={c.logo} alt="logo" />
+          </Grid>
+
+          <Grid item xs />
+        </Hidden>
 
         {environment.INTERCOM_APP_ID && (
           <>
@@ -103,8 +118,10 @@ function SignupPage(props) {
 
       <Paper elevation={3} className={[c.paper, c.checkout].join(' ')}>
         <Typography variant="h5" align="center" className={c.cardHeader}>
-          You’re just minutes away from accessing
-          <br />
+          You’re just minutes away from accessing{' '}
+          <Hidden smDown>
+            <br />
+          </Hidden>
           The entire Brilliant TV Library!
         </Typography>
 
