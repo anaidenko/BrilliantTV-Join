@@ -5,10 +5,15 @@
   font-size: calc(10px + 2vmin);
   justify-content: center;
   min-height: 100vh;
+  position: relative;
   text-align: center;
 }
 
-.MuiFilledInput-root,
+.MuiFilledInput-root {
+  border-radius: 0 !important;
+}
+
 .MuiButton-root {
   border-radius: 0 !important;
+  box-shadow: none !important;
 }

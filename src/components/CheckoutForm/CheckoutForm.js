@@ -368,6 +368,7 @@ class CheckoutForm extends Component<Props, State> {
           onClick={this.handlePurchaseClick}
           size="large"
           variant="contained"
+          aria-label="click to submit payment"
         >
           Submit Payment
         </Button>

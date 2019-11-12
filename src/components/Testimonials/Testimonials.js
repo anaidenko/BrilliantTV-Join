@@ -2,6 +2,7 @@
 
 import { Box, GridList, GridListTile, Typography } from '@material-ui/core';
 import { withStyles } from '@material-ui/core/styles';
+import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
 import React, { Component } from 'react';
 
 import Stars from '../Stars';
@@ -99,13 +100,23 @@ class Testimonials extends Component<Props, State> {
     };
   }
 
+  getGridListCols(width) {
+    if (isWidthUp('lg', width)) {
+      return 3;
+    }
+    if (isWidthUp('sm', width)) {
+      return 2;
+    }
+    return 1;
+  }
+
   render() {
-    const { classes: c } = this.props;
+    const { classes: c, width } = this.props;
     const { testimonials } = this.state;
 
     return (
       <Box align="left" className={c.root}>
-        <GridList cols={3} rows={2} spacing={20} className={c.gridList}>
+        <GridList cols={this.getGridListCols(width)} spacing={20} className={c.gridList}>
           {testimonials.map((testimonial, i) => (
             <GridListTile className={c.gridTile} key={i}>
               <Box padding={1} className={c.gridTileBox}>
@@ -116,10 +127,10 @@ class Testimonials extends Component<Props, State> {
                 <Stars className={c.stars} />
                 <Typography className={c.body}>
                   {testimonial.content.map((line, j) => (
-                    <>
+                    <span key={j}>
                       {j > 0 && <br />}
                       {line}
-                    </>
+                    </span>
                   ))}
                 </Typography>
               </Box>
@@ -131,4 +142,4 @@ class Testimonials extends Component<Props, State> {
   }
 }
 
-export default withStyles(styles, { withTheme: true })(Testimonials);
+export default withStyles(styles, { withTheme: true })(withWidth()(Testimonials));

@@ -4,8 +4,8 @@ const vhx = require('vhx')(process.env.VHX_API_KEY);
 const util = require('util');
 
 exports.config = function() {
-  const { DEBUG, REACT_APP_BACKEND_URL, STRIPE_PUBLISHABLE_KEY, VHX_PORTAL_URL } = process.env;
-  return { DEBUG, REACT_APP_BACKEND_URL, STRIPE_PUBLISHABLE_KEY, VHX_PORTAL_URL };
+  const { DEBUG, REACT_APP_BACKEND_URL, STRIPE_PUBLISHABLE_KEY, VHX_PORTAL_URL, INTERCOM_APP_ID } = process.env;
+  return { DEBUG, REACT_APP_BACKEND_URL, STRIPE_PUBLISHABLE_KEY, VHX_PORTAL_URL, INTERCOM_APP_ID };
 };
 
 exports.planDetails = async function(plan) {
