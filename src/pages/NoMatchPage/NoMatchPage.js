@@ -1,8 +1,6 @@
-// @flow
-
 import React from 'react';
 
-const NoMatch = ({ location }) => (
+const NoMatchPage = ({ location }) => (
   <div>
     <h3>
       Sorry, page not found at <code>{location.pathname}</code>
@@ -10,4 +8,4 @@ const NoMatch = ({ location }) => (
   </div>
 );
 
-export default NoMatch;
+export default NoMatchPage;

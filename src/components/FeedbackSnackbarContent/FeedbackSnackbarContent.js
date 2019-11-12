@@ -47,22 +47,22 @@ const styles = (theme) => ({
 });
 
 function FeedbackSnackbarContent(props) {
-  const { classes, className, message, onClose, variant, ...other } = props;
+  const { classes: c, className, message, onClose, variant, ...other } = props;
   const Icon = variantIcon[variant];
 
   return (
     <SnackbarContent
-      className={clsx(classes.root, classes[variant], className)}
+      className={clsx(c.root, c[variant], className)}
       aria-describedby="client-snackbar"
       message={
-        <span id="client-snackbar" className={classes.message}>
-          <Icon className={clsx(classes.icon, classes.iconVariant)} />
+        <span id="client-snackbar" className={c.message}>
+          <Icon className={clsx(c.icon, c.iconVariant)} />
           {message}
         </span>
       }
       action={[
         <IconButton key="close" aria-label="close" color="inherit" onClick={onClose}>
-          <CloseIcon className={classes.icon} />
+          <CloseIcon className={c.icon} />
         </IconButton>,
       ]}
       {...other}

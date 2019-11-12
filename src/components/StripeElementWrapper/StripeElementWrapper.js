@@ -4,7 +4,15 @@
 // Similar to Material UI's <TextField>. Handles focused, empty and error state
 // to correctly show the floating label and error messages etc.
 
-import { FormControl, FormHelperText, InputAdornment, InputLabel, OutlinedInput, withStyles } from '@material-ui/core';
+import {
+  Box,
+  FilledInput,
+  FormControl,
+  FormHelperText,
+  InputAdornment,
+  Typography,
+  withStyles,
+} from '@material-ui/core';
 import PropTypes from 'prop-types';
 import React, { PureComponent } from 'react';
 
@@ -15,8 +23,11 @@ const styles = () => ({
   brandIcon: {
     width: 30,
   },
+  formControl: {
+    margin: 0,
+  },
   input: {
-    padding: '18.5px 14px',
+    padding: '8px 12px 10px 12px',
   },
 });
 
@@ -32,10 +43,9 @@ const cardBrandToPfClass = {
 
 type Props = {
   brandIcon?: boolean,
-  classes?: object,
-  component: object,
+  classes: Object,
+  component: Object,
   label: string,
-  labelWidth?: number,
   placeholder?: string,
   showError?: boolean,
 };
@@ -54,7 +64,7 @@ class StripeElementWrapper extends PureComponent<Props, State> {
     this.state = {
       focused: false,
       empty: true,
-      error: false,
+      error: '',
       brandIcon: '',
     };
   }
@@ -84,35 +94,34 @@ class StripeElementWrapper extends PureComponent<Props, State> {
   };
 
   render() {
-    const { component, label, brandIcon: showBrandIcon, labelWidth, classes: c, showError, placeholder } = this.props;
+    const { component, label, brandIcon: showBrandIcon, classes: c, showError, placeholder } = this.props;
     const { focused, empty, error, brandIcon } = this.state;
 
     return (
-      <div className={c.root}>
-        <FormControl fullWidth margin="normal" variant="outlined">
-          <InputLabel
+      <Box className={c.root} align="left">
+        {label && <Typography variant="subtitle1">{label}</Typography>}
+        <FormControl fullWidth variant="filled" className={c.formControl}>
+          {/* <InputLabel
             focused={focused}
             shrink={focused || !empty}
             error={!!error || (empty && showError)}
-            variant="outlined"
+            variant="filled"
           >
             {label}
-          </InputLabel>
-          <OutlinedInput
+          </InputLabel> */}
+          <FilledInput
             className={c.input}
             error={!!error || (empty && showError)}
             fullWidth
             inputComponent={StripeInput}
             inputProps={{ component }}
-            labelWidth={labelWidth}
-            notched={focused || !empty}
             onBlur={this.handleBlur}
             onChange={this.handleChange}
             onFocus={this.handleFocus}
             placeholder={focused ? placeholder : ''}
             endAdornment={
               showBrandIcon && (
-                <InputAdornment position="start">
+                <InputAdornment>
                   <span className={c.brandIcon}>
                     <i className={['pf', brandIcon].join(' ')} />
                   </span>
@@ -122,15 +131,13 @@ class StripeElementWrapper extends PureComponent<Props, State> {
           />
         </FormControl>
         {error && <FormHelperText error>{error.message}</FormHelperText>}
-      </div>
+      </Box>
     );
   }
 }
 
 StripeElementWrapper.defaultProps = {
   brandIcon: false,
-  classes: {},
-  labelWidth: 0,
   placeholder: '',
   showError: false,
 };
