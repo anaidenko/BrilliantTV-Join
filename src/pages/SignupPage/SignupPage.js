@@ -135,7 +135,7 @@ function SignupPage(props) {
           </Grid>
           <Divider orientation="vertical" className={c.divider} />
           <Grid item sm container direction="column">
-            <CheckoutDetails />
+            <CheckoutDetails match={match} plan={environment.plan} />
           </Grid>
         </Grid>
       </Paper>
