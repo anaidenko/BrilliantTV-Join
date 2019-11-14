@@ -1,6 +1,8 @@
+// @flow
+
 import { Box, Button, Divider, Fab, Grid, Hidden, Paper, Typography } from '@material-ui/core';
 import { withStyles } from '@material-ui/core/styles';
-import React from 'react';
+import React, { Component } from 'react';
 import Intercom from 'react-intercom';
 import { Elements, StripeProvider } from 'react-stripe-elements';
 
@@ -70,114 +72,126 @@ const styles = (theme) => ({
   },
 });
 
-function SignupPage(props) {
-  const { classes: c, match } = props;
-  return (
-    <Box className={c.root}>
-      {environment.INTERCOM_APP_ID && (
-        <Intercom appID={environment.INTERCOM_APP_ID} custom_launcher_selector=".intercom-launcher" />
-      )}
+type Props = {
+  classes: Object,
+  match: Object,
+};
 
-      <Hidden smUp>
-        <Box mb={2}>
-          <img src="/images/BTV_Logo_Dark.png" className={c.logo} alt="logo" />
-        </Box>
-      </Hidden>
+class SignupPage extends Component<Props> {
+  handlePaymentComplete = () => {
+    window.location = environment.SIGNUP_SUCCESS_PAGE || 'https://subscribe.brillianttv.com/welcome';
+  };
 
-      <Grid container className={c.header} direction="row" wrap="nowrap" alignItems="center" justify="center">
-        <Hidden only="xs">
-          <Grid item align="left">
-            <img src="/images/BTV_Logo_Dark.png" className={c.logo} alt="logo" />
-          </Grid>
+  render() {
+    const { classes: c, match } = this.props;
 
-          <Grid item xs />
-        </Hidden>
-
+    return (
+      <Box className={c.root}>
         {environment.INTERCOM_APP_ID && (
-          <>
-            <Grid item>
-              <Box mr={4}>
-                <Typography variant="h5" className={c.needHelp}>
-                  Need Help?
-                </Typography>
-              </Box>
-            </Grid>
-            <Grid item>
-              <Button
-                variant="contained"
-                color="primary"
-                className={[c.chatWithSupport, 'intercom-launcher'].join(' ')}
-                aria-label="click to chat with support"
-              >
-                Click to Chat with Support
-              </Button>
-            </Grid>
-          </>
+          <Intercom appID={environment.INTERCOM_APP_ID} custom_launcher_selector=".intercom-launcher" />
         )}
-      </Grid>
 
-      <Paper elevation={3} className={[c.paper, c.checkout].join(' ')}>
-        <Typography variant="h5" align="center" className={c.cardHeader}>
-          You’re just minutes away from accessing{' '}
-          <Hidden smDown>
-            <br />
-          </Hidden>
-          The entire Brilliant TV Library!
-        </Typography>
-
-        <Grid container spacing={2} xs-direction="column">
-          <Grid item sm container direction="column" className={c.dividerRight}>
-            <StripeProvider apiKey={environment.STRIPE_PUBLISHABLE_KEY}>
-              <Elements>
-                <CheckoutForm match={match} />
-              </Elements>
-            </StripeProvider>
-          </Grid>
-          <Divider orientation="vertical" className={c.divider} />
-          <Grid item sm container direction="column">
-            <CheckoutDetails match={match} plan={environment.plan} />
-          </Grid>
-        </Grid>
-      </Paper>
-
-      <Paper elevation={3} className={[c.paper, c.testimonials].join(' ')}>
-        <Typography variant="h5" align="center" className={c.cardHeader}>
-          Testimonials
-        </Typography>
-
-        <Typography align="center" className={c.subHeader1}>
-          The Transformation You’re Desiring Is Closer Than You Think.
-        </Typography>
-
-        <Typography align="center" className={c.subHeader2}>
-          Brilliant TV Has Helped Thousands Experience Transformational Growth!
-        </Typography>
-
-        <Box mt={4}>
-          <Testimonials />
-        </Box>
-      </Paper>
-
-      {environment.INTERCOM_APP_ID && (
-        <Hidden smDown>
-          <Box position="absolute" right="0" top="50%" className={c.intercomFloatingPanel}>
-            <Typography variant="h5" className={c.needHelp}>
-              Need Help?
-            </Typography>
-            <Fab
-              aria-label="chat with support"
-              className={[c.chatWithSupport, c.chatWithSupportFab, 'intercom-launcher'].join(' ')}
-              color="primary"
-            >
-              Chat with
-              <br />
-              Support
-            </Fab>
+        <Hidden smUp>
+          <Box mb={2}>
+            <img src="/images/BTV_Logo_Dark.png" className={c.logo} alt="logo" />
           </Box>
         </Hidden>
-      )}
-    </Box>
-  );
+
+        <Grid container className={c.header} direction="row" wrap="nowrap" alignItems="center" justify="center">
+          <Hidden only="xs">
+            <Grid item align="left">
+              <img src="/images/BTV_Logo_Dark.png" className={c.logo} alt="logo" />
+            </Grid>
+
+            <Grid item xs />
+          </Hidden>
+
+          {environment.INTERCOM_APP_ID && (
+            <>
+              <Grid item>
+                <Box mr={4}>
+                  <Typography variant="h5" className={c.needHelp}>
+                    Need Help?
+                  </Typography>
+                </Box>
+              </Grid>
+              <Grid item>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  className={[c.chatWithSupport, 'intercom-launcher'].join(' ')}
+                  aria-label="click to chat with support"
+                >
+                  Click to Chat with Support
+                </Button>
+              </Grid>
+            </>
+          )}
+        </Grid>
+
+        <Paper elevation={3} className={[c.paper, c.checkout].join(' ')}>
+          <Typography variant="h5" align="center" className={c.cardHeader}>
+            You’re just minutes away from accessing{' '}
+            <Hidden smDown>
+              <br />
+            </Hidden>
+            The entire Brilliant TV Library!
+          </Typography>
+
+          <Grid container spacing={2} xs-direction="column">
+            <Grid item sm container direction="column" className={c.dividerRight}>
+              <StripeProvider apiKey={environment.STRIPE_PUBLISHABLE_KEY}>
+                <Elements>
+                  <CheckoutForm match={match} onComplete={this.handlePaymentComplete} />
+                </Elements>
+              </StripeProvider>
+            </Grid>
+            <Divider orientation="vertical" className={c.divider} />
+            <Grid item sm container direction="column">
+              <CheckoutDetails match={match} plan={environment.plan} />
+            </Grid>
+          </Grid>
+        </Paper>
+
+        <Paper elevation={3} className={[c.paper, c.testimonials].join(' ')}>
+          <Typography variant="h5" align="center" className={c.cardHeader}>
+            Testimonials
+          </Typography>
+
+          <Typography align="center" className={c.subHeader1}>
+            The Transformation You’re Desiring Is Closer Than You Think.
+          </Typography>
+
+          <Typography align="center" className={c.subHeader2}>
+            Brilliant TV Has Helped Thousands Experience Transformational Growth!
+          </Typography>
+
+          <Box mt={4}>
+            <Testimonials />
+          </Box>
+        </Paper>
+
+        {environment.INTERCOM_APP_ID && (
+          <Hidden smDown>
+            <Box position="absolute" right="0" top="50%" className={c.intercomFloatingPanel}>
+              <Typography variant="h5" className={c.needHelp}>
+                Need Help?
+              </Typography>
+              <Fab
+                aria-label="chat with support"
+                className={[c.chatWithSupport, c.chatWithSupportFab, 'intercom-launcher'].join(' ')}
+                color="primary"
+              >
+                Chat with
+                <br />
+                Support
+              </Fab>
+            </Box>
+          </Hidden>
+        )}
+      </Box>
+    );
+  }
 }
 
 export default withStyles(styles, { withTheme: true })(SignupPage);

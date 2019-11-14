@@ -13,7 +13,9 @@ import FeedbackSnackbarContent from '../FeedbackSnackbarContent';
 import StripeCardsSection from '../StripeCardsSection';
 import TextField from '../TextField';
 
-type Props = InjectedProps & {};
+type Props = InjectedProps & {
+  onComplete: Function,
+};
 
 type State = {
   emailAddress: string,
@@ -24,7 +26,6 @@ type State = {
   plan: string,
 
   performingAction: boolean,
-  complete: boolean,
   errors: Object,
   serverError: string,
   showErrors: boolean,
@@ -84,7 +85,6 @@ class CheckoutForm extends Component<Props, State> {
       plan: '',
 
       performingAction: false,
-      complete: false,
       errors: null,
       serverError: '',
       showErrors: false,
@@ -118,7 +118,7 @@ class CheckoutForm extends Component<Props, State> {
           showErrors: true,
         },
         async () => {
-          const { stripe } = this.props;
+          const { stripe, onComplete } = this.props;
           const { fullName, emailAddress, password, marketingOptIn, plan } = this.state;
           const { token } = await stripe.createToken({ name: fullName });
 
@@ -146,8 +146,9 @@ class CheckoutForm extends Component<Props, State> {
           if (response.ok) {
             const content = await response.json();
             console.log('Signup Succeed', content);
-            this.setState({ complete: true, performingAction: false });
-            window.location = 'https://subscribe.brillianttv.com/welcome';
+            if (onComplete) {
+              onComplete();
+            }
           } else {
             const content = await response.json();
             const error = (content && content.message) || response.statusText;
@@ -239,7 +240,6 @@ class CheckoutForm extends Component<Props, State> {
 
     const {
       performingAction,
-      complete,
 
       fullName,
       emailAddress,
@@ -251,25 +251,6 @@ class CheckoutForm extends Component<Props, State> {
       serverError,
       showErrors,
     } = this.state;
-
-    if (complete) {
-      return <></>;
-      //   return (
-      //     <form className={c.root}>
-      //       <Typography variant="h3">Registration Complete</Typography>
-
-      //       <Button
-      //         className={c.login}
-      //         color="secondary"
-      //         href={`${environment.VHX_PORTAL_URL}/login`}
-      //         size="large"
-      //         variant="contained"
-      //       >
-      //         Go to Login
-      //       </Button>
-      //     </form>
-      //   );
-    }
 
     return (
       <form className={c.root}>

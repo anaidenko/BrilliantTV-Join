@@ -4,8 +4,16 @@ const vhx = require('vhx')(process.env.VHX_API_KEY);
 const util = require('util');
 
 exports.config = function() {
-  const { DEBUG, REACT_APP_BACKEND_URL, STRIPE_PUBLISHABLE_KEY, VHX_PORTAL_URL, INTERCOM_APP_ID } = process.env;
-  return { DEBUG, REACT_APP_BACKEND_URL, STRIPE_PUBLISHABLE_KEY, VHX_PORTAL_URL, INTERCOM_APP_ID };
+  const {
+    DEBUG,
+    INTERCOM_APP_ID,
+    REACT_APP_BACKEND_URL,
+    SIGNUP_SUCCESS_PAGE,
+    STRIPE_PUBLISHABLE_KEY,
+    VHX_PORTAL_URL,
+  } = process.env;
+
+  return { DEBUG, INTERCOM_APP_ID, REACT_APP_BACKEND_URL, SIGNUP_SUCCESS_PAGE, STRIPE_PUBLISHABLE_KEY, VHX_PORTAL_URL };
 };
 
 exports.planDetails = async function(plan) {
@@ -72,7 +80,6 @@ exports.signup = async function(metadata) {
   let stripeSubscription = null;
   const stripeSubscriptionMetadata = {
     customer: stripeCustomer.id,
-    marketing_opt_in: metadata.marketingOptIn,
     collection_method: 'charge_automatically',
     items: [{ plan: getPlanId(metadata.plan) }],
   };
@@ -95,6 +102,7 @@ exports.signup = async function(metadata) {
     product: metadata.product,
     plan: metadata.plan,
     password: metadata.password,
+    marketing_opt_in: metadata.marketingOptIn,
   };
 
   try {
