@@ -10,7 +10,7 @@ const styles = (theme) => ({
   },
   label: {
     fontSize: 13,
-    fontWeight: 500,
+    fontWeight: 600,
   },
 });
 

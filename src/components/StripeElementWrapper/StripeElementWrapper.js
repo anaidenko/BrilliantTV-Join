@@ -26,6 +26,10 @@ const styles = () => ({
   formControl: {
     margin: 0,
   },
+  label: {
+    fontSize: 13,
+    fontWeight: 600,
+  },
   input: {
     padding: '8px 12px 10px 12px',
   },
@@ -99,16 +103,12 @@ class StripeElementWrapper extends PureComponent<Props, State> {
 
     return (
       <Box className={c.root} align="left">
-        {label && <Typography variant="subtitle1">{label}</Typography>}
-        <FormControl fullWidth variant="filled" className={c.formControl}>
-          {/* <InputLabel
-            focused={focused}
-            shrink={focused || !empty}
-            error={!!error || (empty && showError)}
-            variant="filled"
-          >
+        {label && (
+          <Typography variant="subtitle1" className={c.label}>
             {label}
-          </InputLabel> */}
+          </Typography>
+        )}
+        <FormControl fullWidth variant="filled" className={c.formControl}>
           <FilledInput
             className={c.input}
             error={!!error || (empty && showError)}

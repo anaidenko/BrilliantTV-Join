@@ -12,6 +12,7 @@ const styles = (theme) => ({
   featuresList: {
     '& .MuiListItem-dense': {
       paddingTop: 0,
+      paddingBottom: 0,
     },
     '& .MuiListItemText-dense': {
       margin: 0,
@@ -108,7 +109,7 @@ class CheckoutDetails extends Component<Props, State> {
   renderFeatureItem(feature, key) {
     const { classes: c } = this.props;
     return (
-      <ListItem dense disableGutters className={c.featureItem} key={key}>
+      <ListItem dense disableGutters key={key}>
         <ListItemIcon>
           <CheckIcon />
         </ListItemIcon>
@@ -133,7 +134,7 @@ class CheckoutDetails extends Component<Props, State> {
     return (
       <Box>
         <Typography variant="h6" align="left" className={c.joinGrahamText}>
-          Join Graham’s inner-circle and receive:
+          Join Graham’s mentoring community and receive:
         </Typography>
         <List component="ul" className={c.featuresList}>
           {features.map((feature, i) => this.renderFeatureItem(feature, i))}
@@ -153,7 +154,10 @@ class CheckoutDetails extends Component<Props, State> {
           <br />
           Transformational Guarantee
         </Typography>
-        <Typography className={c.refundNote}>If after 30 days you don’t feel change, we’ll refund you.</Typography>
+        <Typography className={c.refundNote}>
+          If you do not experience any growth in your relationship with God, simply notify us within 30 days and you’ll
+          get a full refund! No questions asked.
+        </Typography>
       </Box>
     );
   }
