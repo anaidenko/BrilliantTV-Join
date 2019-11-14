@@ -64,7 +64,7 @@ class CheckoutDetails extends Component<Props, State> {
     this.state = {
       ...this.state,
       features: [
-        { name: 'Weekly inner circle mentoring', price: '$4375' },
+        { name: 'Exclusive, weekly mentoring videos', price: '$4375' },
         { name: 'Access the entire Brilliant TV Library', price: '$1900' },
         { name: 'Printable PDF activation guides', price: '$40' },
         { name: 'Enrollment in Immersion Courses', price: '$150' },
