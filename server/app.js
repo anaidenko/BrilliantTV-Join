@@ -3,10 +3,16 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const morgan = require('morgan');
 const path = require('path');
+const sslRedirect = require('heroku-ssl-redirect');
 
 require('./config');
 
 const app = express();
+
+// Redirect unencrypted HTTP requests to HTTPS on Heroku instances
+if (process.env.FORCE_HTTPS === 'true') {
+  app.use(sslRedirect());
+}
 
 app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 app.use(bodyParser.json());
