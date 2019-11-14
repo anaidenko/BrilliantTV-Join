@@ -1,6 +1,6 @@
 // @flow
 
-import { Box, Button, Grid, Typography } from '@material-ui/core';
+import { Box, Button, Checkbox, FormControlLabel, Grid, Typography } from '@material-ui/core';
 import { withStyles } from '@material-ui/core/styles';
 import React, { Component } from 'react';
 import { InjectedProps, injectStripe } from 'react-stripe-elements';
@@ -20,6 +20,7 @@ type State = {
   fullName: string,
   password: string,
   passwordConfirmation: string,
+  marketingOptIn: boolean,
   plan: string,
 
   performingAction: boolean,
@@ -79,13 +80,8 @@ class CheckoutForm extends Component<Props, State> {
       fullName: '',
       password: '',
       passwordConfirmation: '',
+      marketingOptIn: false,
       plan: '',
-
-      // emailAddress: 'navbox0@gmail.com',
-      // fullName: 'Andrii Naidenko',
-      // password: 'qwerqwer',
-      // passwordConfirmation: 'qwerqwer',
-      // plan: '',
 
       performingAction: false,
       complete: false,
@@ -123,7 +119,7 @@ class CheckoutForm extends Component<Props, State> {
         },
         async () => {
           const { stripe } = this.props;
-          const { fullName, emailAddress, password, plan } = this.state;
+          const { fullName, emailAddress, password, marketingOptIn, plan } = this.state;
           const { token } = await stripe.createToken({ name: fullName });
 
           if (!token) {
@@ -136,6 +132,7 @@ class CheckoutForm extends Component<Props, State> {
             name: fullName,
             email: emailAddress,
             password,
+            marketingOptIn,
             plan,
           };
           const response = await fetch(`${environment.REACT_APP_BACKEND_URL}/signup`, {
@@ -248,6 +245,7 @@ class CheckoutForm extends Component<Props, State> {
       emailAddress,
       password,
       passwordConfirmation,
+      marketingOptIn,
 
       errors,
       serverError,
@@ -352,6 +350,25 @@ class CheckoutForm extends Component<Props, State> {
         </Typography>
         <Grid item container direction="column" className={c.grid}>
           <StripeCardsSection showError={showErrors} />
+        </Grid>
+
+        <Grid item className={c.grid}>
+          <FormControlLabel
+            disabled={performingAction}
+            control={
+              <Checkbox
+                checked={marketingOptIn}
+                value="marketingOptIn"
+                color="secondary"
+                onChange={this.handleFieldCheck('marketingOptIn')}
+              />
+            }
+            label={
+              <Typography color="textSecondary" variant="body2" align="left">
+                I agree to receive newsletters and product updates from Brilliant TV
+              </Typography>
+            }
+          />
         </Grid>
 
         {serverError && (

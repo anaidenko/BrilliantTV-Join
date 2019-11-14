@@ -53,6 +53,7 @@ exports.signup = async function(metadata) {
     metadata: {
       product: metadata.product,
       plan: metadata.plan,
+      marketingOptIn: metadata.marketingOptIn,
     },
   };
 
@@ -71,6 +72,7 @@ exports.signup = async function(metadata) {
   let stripeSubscription = null;
   const stripeSubscriptionMetadata = {
     customer: stripeCustomer.id,
+    marketing_opt_in: metadata.marketingOptIn,
     collection_method: 'charge_automatically',
     items: [{ plan: getPlanId(metadata.plan) }],
   };

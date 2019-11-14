@@ -13,6 +13,9 @@ const styles = (theme) => ({
   grid: {
     marginBottom: theme.spacing(2),
     flexWrap: 'nowrap',
+    '&:last-of-type': {
+      marginBottom: 0,
+    },
   },
   gridItem: {
     marginRight: theme.spacing(1),
