@@ -135,7 +135,7 @@ class SignupPage extends Component<Props> {
             <Hidden smDown>
               <br />
             </Hidden>
-            The entire Brilliant TV Library!
+            the entire Brilliant TV Library!
           </Typography>
 
           <Grid container spacing={2} xs-direction="column">

@@ -61,7 +61,7 @@ class CheckoutDetails extends Component<Props, State> {
     this.state = {
       ...this.state,
       features: [
-        { name: 'Join weekly inner circle mentoring', price: '$4375' },
+        { name: 'Weekly inner circle mentoring', price: '$4375' },
         { name: 'Access the entire Brilliant TV Library', price: '$1900' },
         { name: 'Printable PDF activation guides', price: '$40' },
         { name: 'Enrollment in Immersion Courses', price: '$150' },
@@ -130,7 +130,7 @@ class CheckoutDetails extends Component<Props, State> {
     return (
       <Box>
         <Typography variant="h6" align="left">
-          Here’s what’s included:
+          Join Graham’s inner-circle and receive:
         </Typography>
         <List component="ul" className={c.featuresList}>
           {features.map((feature, i) => this.renderFeatureItem(feature, i))}
@@ -138,10 +138,12 @@ class CheckoutDetails extends Component<Props, State> {
         <Typography variant="h6" className={c.totalValue}>
           Total Value of $6,545+
         </Typography>
-        <Typography>Access everything for only</Typography>
-        <Typography variant="h6" className={c.todayPrice}>
-          Today only {price}/{interval}
-        </Typography>
+        <Box mt={2} mb={4}>
+          <Typography>Access everything for only</Typography>
+          <Typography variant="h6" className={c.todayPrice}>
+            Today only {price}/{interval}
+          </Typography>
+        </Box>
         <img src="/images/Satisfaction_Guaranteed.png" width="218" height="184" alt="satisfaction guaranteed" />
         <Typography variant="h6" className={c.moneyBackGuarantee} color="primary">
           30 Day Money-Back
