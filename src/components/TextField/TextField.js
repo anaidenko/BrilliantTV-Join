@@ -5,11 +5,12 @@ const styles = (theme) => ({
   root: {
     '& input': {
       paddingTop: theme.spacing(1),
+      paddingBottom: theme.spacing(1),
     },
   },
   label: {
     fontSize: 13,
-    fontWeight: 'bold',
+    fontWeight: 500,
   },
 });
 

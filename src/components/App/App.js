@@ -20,6 +20,9 @@ const theme = createMuiTheme({
     secondary: {
       main: teal[500],
     },
+    text: {
+      primary: '#31394F',
+    },
   },
   typography: {
     // fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',

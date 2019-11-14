@@ -33,11 +33,14 @@ const styles = (theme) => ({
     marginBottom: theme.spacing(2),
   },
   moneyBackGuarantee: {
-    lineHeight: 1,
+    lineHeight: 1.1,
     margin: theme.spacing(1),
   },
   refundNote: {
     fontSize: 10,
+  },
+  joinGrahamText: {
+    fontSize: 17,
   },
 });
 
@@ -129,7 +132,7 @@ class CheckoutDetails extends Component<Props, State> {
 
     return (
       <Box>
-        <Typography variant="h6" align="left">
+        <Typography variant="h6" align="left" className={c.joinGrahamText}>
           Join Graham’s inner-circle and receive:
         </Typography>
         <List component="ul" className={c.featuresList}>

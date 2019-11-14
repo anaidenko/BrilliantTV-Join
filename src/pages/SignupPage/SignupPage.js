@@ -132,7 +132,7 @@ class SignupPage extends Component<Props> {
         <Paper elevation={3} className={[c.paper, c.checkout].join(' ')}>
           <Typography variant="h5" align="center" className={c.cardHeader}>
             You’re just minutes away from accessing{' '}
-            <Hidden smDown>
+            <Hidden only="xs">
               <br />
             </Hidden>
             the entire Brilliant TV Library!
@@ -148,6 +148,9 @@ class SignupPage extends Component<Props> {
             </Grid>
             <Divider orientation="vertical" className={c.divider} />
             <Grid item sm container direction="column">
+              <Hidden smUp>
+                <Box mt={2} />
+              </Hidden>
               <CheckoutDetails match={match} plan={environment.plan} />
             </Grid>
           </Grid>

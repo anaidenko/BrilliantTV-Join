@@ -254,7 +254,7 @@ class CheckoutForm extends Component<Props, State> {
 
     return (
       <form className={c.root}>
-        <Typography align="left" variant="h6" color="primary" className={c.formHeader}>
+        <Typography align="left" variant="h5" color="primary" className={c.formHeader}>
           BrilliantTV Account Information
         </Typography>
         <Grid item container direction="column" className={c.grid}>
@@ -326,7 +326,7 @@ class CheckoutForm extends Component<Props, State> {
           </Grid>
         </Grid>
 
-        <Typography variant="h6" color="primary" className={c.formHeader}>
+        <Typography variant="h5" color="primary" className={c.formHeader}>
           Payment Information
         </Typography>
         <Grid item container direction="column" className={c.grid}>
