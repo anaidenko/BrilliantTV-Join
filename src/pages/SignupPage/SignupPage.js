@@ -105,7 +105,7 @@ function SignupPage(props) {
         <Typography variant="h5" align="center" className={c.cardHeader}>
           You’re just minutes away from accessing
           <br />
-          The entire Brilliant TV Library!
+          the entire Brilliant TV Library!
         </Typography>
 
         <Grid container spacing={2} xs-direction="column">
