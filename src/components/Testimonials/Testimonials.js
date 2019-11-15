@@ -35,6 +35,7 @@ const styles = (theme) => ({
   },
   body: {
     fontSize: 15,
+    fontWeight: 500,
     lineHeight: 1.2,
   },
 });

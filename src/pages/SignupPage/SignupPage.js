@@ -88,7 +88,11 @@ class SignupPage extends Component<Props> {
     return (
       <Box className={c.root}>
         {environment.INTERCOM_APP_ID && (
-          <Intercom appID={environment.INTERCOM_APP_ID} custom_launcher_selector=".intercom-launcher" />
+          <Intercom
+            appID={environment.INTERCOM_APP_ID}
+            custom_launcher_selector=".intercom-launcher"
+            hide_default_launcher
+          />
         )}
 
         <Hidden smUp>
@@ -176,7 +180,7 @@ class SignupPage extends Component<Props> {
 
         {environment.INTERCOM_APP_ID && (
           <Hidden smDown>
-            <Box position="absolute" right="0" top="50%" className={c.intercomFloatingPanel}>
+            <Box position="fixed" bottom={15} right={0} className={c.intercomFloatingPanel}>
               <Typography variant="h5" className={c.needHelp}>
                 Need Help?
               </Typography>

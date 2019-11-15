@@ -8,18 +8,24 @@ import environment from '../../config/environment';
 import { CheckIcon } from '../../icons';
 
 const styles = (theme) => ({
-  root: {},
+  root: {
+    marginRight: theme.spacing(-1),
+  },
   featuresList: {
     '& .MuiListItem-dense': {
+      alignItems: 'flex-start',
+      marginBottom: 8,
       paddingTop: 0,
       paddingBottom: 0,
     },
     '& .MuiListItemText-dense': {
+      display: 'flex',
       margin: 0,
     },
     '& .MuiListItemIcon-root': {
       minWidth: 0,
       marginRight: theme.spacing(1),
+      marginTop: 4,
     },
   },
   priceTag: {
@@ -27,7 +33,8 @@ const styles = (theme) => ({
   },
   totalValue: {
     fontWeight: 'bold',
-    margin: theme.spacing(1),
+    marginTop: theme.spacing(1),
+    marginBottom: theme.spacing(3),
   },
   todayPrice: {
     color: '#EA0000',
@@ -132,7 +139,7 @@ class CheckoutDetails extends Component<Props, State> {
     const { features, price, interval } = this.state;
 
     return (
-      <Box>
+      <Box className={c.root}>
         <Typography variant="h6" align="left" className={c.joinGrahamText}>
           Join Graham’s mentoring community and receive:
         </Typography>

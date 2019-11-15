@@ -53,6 +53,7 @@ const styles = (theme) => ({
   register: {
     backgroundColor: '#35BA0D',
     fontSize: '18px',
+    marginTop: theme.spacing(1),
     marginBottom: theme.spacing(3),
     textTransform: 'none',
   },
@@ -336,25 +337,6 @@ class CheckoutForm extends Component<Props, State> {
           <StripeCardsSection showError={showErrors} />
         </Grid>
 
-        <Grid item className={c.grid}>
-          <FormControlLabel
-            disabled={performingAction}
-            control={
-              <Checkbox
-                checked={marketingOptIn}
-                value="marketingOptIn"
-                color="secondary"
-                onChange={this.handleFieldCheck('marketingOptIn')}
-              />
-            }
-            label={
-              <Typography color="textSecondary" variant="body2" align="left" className={c.marketingOptIn}>
-                I agree to receive newsletters and product updates from Brilliant TV
-              </Typography>
-            }
-          />
-        </Grid>
-
         {serverError && (
           <Box my={2}>
             <FeedbackSnackbarContent variant="error" message={serverError} onClose={this.handleFeedbackClose} />
@@ -373,6 +355,25 @@ class CheckoutForm extends Component<Props, State> {
         >
           Submit Payment
         </Button>
+
+        <Grid item className={c.grid}>
+          <FormControlLabel
+            disabled={performingAction}
+            control={
+              <Checkbox
+                checked={marketingOptIn}
+                value="marketingOptIn"
+                color="secondary"
+                onChange={this.handleFieldCheck('marketingOptIn')}
+              />
+            }
+            label={
+              <Typography color="textSecondary" variant="body2" align="left" className={c.marketingOptIn}>
+                I agree to receive newsletters and product updates from Brilliant TV
+              </Typography>
+            }
+          />
+        </Grid>
 
         <Box spacing={2}>
           <img src="/icons/payment/visa.png" className={c.paymentTypeIcon} alt="visa card" />

@@ -28,9 +28,9 @@ const theme = createMuiTheme({
     // fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
     fontFamily: '"Montserrat", "Roboto", "Helvetica", "Arial", sans-serif',
     fontSize: 13,
-    fontWeightLight: 400,
-    fontWeightRegular: 500,
-    fontWeightMedium: 600,
+    fontWeightLight: 500,
+    fontWeightRegular: 600,
+    fontWeightMedium: 700,
   },
 });
 
