@@ -155,8 +155,7 @@ class CheckoutDetails extends Component<Props, State> {
           Transformational Guarantee
         </Typography>
         <Typography className={c.refundNote}>
-          If you do not experience any growth in your relationship with God, simply notify us within 30 days and you’ll
-          get a full refund! No questions asked.
+          If you do not experience any growth in your relationship with God, simply notify us within 30 days and you’ll get a full refund! No questions asked..
         </Typography>
       </Box>
     );
