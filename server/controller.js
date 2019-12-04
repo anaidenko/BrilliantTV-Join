@@ -30,13 +30,11 @@ exports.signup = async function(metadata) {
     throw createError(400, 'metadata missing');
   }
 
-  if (metadata.plan === 'annual') {
-    metadata.plan = 'yearly';
-  }
+  metadata.plan = metadata.plan.replace('annual', 'yearly');
 
   // validate
-  if (!['yearly', 'monthly'].includes(metadata.plan)) {
-    throw createError(400, 'yearly or monthly plan expected');
+  if (!getPlanId(metadata.plan)) {
+    throw createError(400, `plan ${metadata.plan} is not configured`);
   }
 
   console.log('Signup requested', { ...metadata, password: null }); // cloak password
@@ -126,6 +124,9 @@ function getPlanId(name) {
     case 'annual':
     case 'yearly':
       return process.env.STRIPE_YEARLY_PLAN_ID;
+    case 'annual-$147':
+    case 'yearly-$147':
+      return process.env.STRIPE_YEARLY_147_PLAN_ID;
     case 'monthly':
       return process.env.STRIPE_MONTHLY_PLAN_ID;
   }

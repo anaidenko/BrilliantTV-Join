@@ -40,7 +40,7 @@ function App() {
       <ThemeProvider theme={theme}>
         <Router>
           <Switch>
-            <Route path="/:plan(annual|yearly|monthly)" component={SignupPage} />
+            <Route path="/:plan(monthly|annual|annual-$147|yearly|yearly-$147)" component={SignupPage} />
             <Route path="/" exact component={SignupPage} />
             <Route component={NoMatchPage} />
           </Switch>

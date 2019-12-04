@@ -1,0 +1,11 @@
+.vscode/
+node_modules/
+dist/
+out-tsc/
+/*.json
+
+src/assets/
+src/*.json
+
+e2e/test-results/
+e2e/*.json
