@@ -47,10 +47,11 @@ router.post('/signup', parseSignupMetadata, async (req, res) => {
     res.send({ ...response, ok: true });
   } catch (err) {
     console.error('Error', err);
-    throw createError(
-      500,
-      'Failed to register new user, credit card was not charged. Please contact customer support.',
-    );
+    if (err && err.status >= 400) {
+      throw err;
+    } else {
+      throw createError(500, 'Failed to register new user, credit card was not charged. Please contact customer support.');
+    }    
   }
 });
 

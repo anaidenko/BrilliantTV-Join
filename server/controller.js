@@ -21,7 +21,7 @@ exports.config = function() {
 exports.planDetails = async function(plan) {
   const planId = getPlanId(plan);
   if (!planId) {
-    throw createError(404, 'plan not found');
+    throw new Error('plan not found');
   }
   const details = await stripe.plans.retrieve(planId);
   return details;
@@ -29,14 +29,14 @@ exports.planDetails = async function(plan) {
 
 exports.signup = async function(metadata) {
   if (!metadata) {
-    throw createError(400, 'metadata missing');
+    throw new Error('metadata missing');
   }
 
   metadata.plan = metadata.plan.replace('annual', 'yearly');
 
   // validate
   if (!getPlanId(metadata.plan)) {
-    throw createError(400, `plan ${metadata.plan} is not configured`);
+    throw new Error(`plan ${metadata.plan} is not configured`);
   }
 
   console.log('Signup requested', { ...metadata, password: null }); // cloak password
@@ -59,7 +59,7 @@ exports.signup = async function(metadata) {
       })).data.length > 0;
 
     if (stripeCustomerAlreadyExists) {
-      throw createError(400, 'User is already registered, please proceed to login page');
+      throw createError(400, 'You have already been subscribed previously, payment declined. Please proceed to login page or contact customer support.');
     }
 
     // create stripe customer
