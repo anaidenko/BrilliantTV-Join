@@ -3,6 +3,8 @@ const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const vhx = require('vhx')(process.env.VHX_API_KEY);
 const util = require('util');
 
+let pendingSignupRequestsByEmail = {};
+
 exports.config = function() {
   const {
     DEBUG,
@@ -39,84 +41,98 @@ exports.signup = async function(metadata) {
 
   console.log('Signup requested', { ...metadata, password: null }); // cloak password
 
-  // check if customer is already registered on stripe
-  const stripeCustomerAlreadyExists =
-    (await stripe.customers.list({
-      email: metadata.email,
-      limit: 1,
-    })).length > 0;
-
-  if (stripeCustomerAlreadyExists) {
-    throw createError(400, 'User is already registered, please proceed to login page');
+  // Reject repeated signup call if there are any pending requests for this user matched by email
+  if (pendingSignupRequestsByEmail[metadata.email]) {
+    throw createError(400, 'Please wait, request to signup was already sent and is being processed. You won\'t be charged twice for registration.');
   }
 
-  // create stripe customer
-  let stripeCustomer = null;
-  const stripeCustomerMetadata = {
-    email: metadata.email,
-    name: metadata.name,
-    source: metadata.stripeToken,
-    metadata: {
+  // Block signup for requested user (by email) to avoid dupliated charges
+  pendingSignupRequestsByEmail[metadata.email] = metadata;
+
+  try {
+
+    // check if customer is already registered on stripe
+    const stripeCustomerAlreadyExists =
+      (await stripe.customers.list({
+        email: metadata.email,
+        limit: 1,
+      })).data.length > 0;
+
+    if (stripeCustomerAlreadyExists) {
+      throw createError(400, 'User is already registered, please proceed to login page');
+    }
+
+    // create stripe customer
+    let stripeCustomer = null;
+    const stripeCustomerMetadata = {
+      email: metadata.email,
+      name: metadata.name,
+      source: metadata.stripeToken,
+      metadata: {
+        product: metadata.product,
+        plan: metadata.plan,
+        marketingOptIn: metadata.marketingOptIn,
+      },
+    };
+
+    try {
+      stripeCustomer = await stripe.customers.create(stripeCustomerMetadata);
+
+      if (process.env.DEBUG === 'true') {
+        console.log('Stripe customer created', stripeCustomer);
+      }
+    } catch (err) {
+      console.error('Failed to create Stripe customer', stripeCustomerMetadata);
+      throw err;
+    }
+
+    // create stripe subscription
+    let stripeSubscription = null;
+    const stripeSubscriptionMetadata = {
+      customer: stripeCustomer.id,
+      collection_method: 'charge_automatically',
+      items: [{ plan: getPlanId(metadata.plan) }],
+    };
+    try {
+      stripeSubscription = await stripe.subscriptions.create(stripeSubscriptionMetadata);
+
+      if (process.env.DEBUG === 'true') {
+        console.log('Stripe subscription created', stripeSubscription);
+      }
+    } catch (err) {
+      console.error('Failed to create Stripe subscription', stripeSubscriptionMetadata);
+      throw err;
+    }
+
+    // create vhx customer
+    let vhxCustomer = null;
+    const vhxCustomerMetadata = {
+      email: metadata.email,
+      name: metadata.name,
       product: metadata.product,
       plan: metadata.plan,
-      marketingOptIn: metadata.marketingOptIn,
-    },
-  };
+      password: metadata.password,
+      marketing_opt_in: metadata.marketingOptIn,
+    };
 
-  try {
-    stripeCustomer = await stripe.customers.create(stripeCustomerMetadata);
+    try {
+      vhxCustomer = await util.promisify(vhx.customers.create)(vhxCustomerMetadata);
 
-    if (process.env.DEBUG === 'true') {
-      console.log('Stripe customer created', stripeCustomer);
+      if (process.env.DEBUG === 'true') {
+        console.log('VHX customer created', vhxCustomer);
+      }
+    } catch (err) {
+      console.error('Failed to create VHX customer', vhxCustomerMetadata);
+      throw err;
     }
-  } catch (err) {
-    console.error('Failed to create Stripe customer', stripeCustomerMetadata);
-    throw err;
+
+    console.log('Signup complete', { ...metadata, password: null }); // cloak password
+
+    return { stripeCustomer, stripeSubscription, vhxCustomer };
+
+  } finally {
+    pendingSignupRequestsByEmail[metadata.email] = null;
   }
-
-  // create stripe subscription
-  let stripeSubscription = null;
-  const stripeSubscriptionMetadata = {
-    customer: stripeCustomer.id,
-    collection_method: 'charge_automatically',
-    items: [{ plan: getPlanId(metadata.plan) }],
-  };
-  try {
-    stripeSubscription = await stripe.subscriptions.create(stripeSubscriptionMetadata);
-
-    if (process.env.DEBUG === 'true') {
-      console.log('Stripe subscription created', stripeSubscription);
-    }
-  } catch (err) {
-    console.error('Failed to create Stripe subscription', stripeSubscriptionMetadata);
-    throw err;
-  }
-
-  // create vhx customer
-  let vhxCustomer = null;
-  const vhxCustomerMetadata = {
-    email: metadata.email,
-    name: metadata.name,
-    product: metadata.product,
-    plan: metadata.plan,
-    password: metadata.password,
-    marketing_opt_in: metadata.marketingOptIn,
-  };
-
-  try {
-    vhxCustomer = await util.promisify(vhx.customers.create)(vhxCustomerMetadata);
-
-    if (process.env.DEBUG === 'true') {
-      console.log('VHX customer created', vhxCustomer);
-    }
-  } catch (err) {
-    console.error('Failed to create VHX customer', vhxCustomerMetadata);
-    throw err;
-  }
-
-  console.log('Signup complete', { ...metadata, password: null }); // cloak password
-
-  return { stripeCustomer, stripeSubscription, vhxCustomer };
 };
 
 function getPlanId(name) {
