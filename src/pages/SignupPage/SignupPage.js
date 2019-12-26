@@ -97,14 +97,19 @@ class SignupPage extends Component<Props> {
 
         <Hidden smUp>
           <Box mb={2}>
-            <a href={"https://subscribe.brillianttv.com/btv-subscription1"}><img src="/images/BTV_Logo_Dark.png" className={c.logo} alt="logo" /></a>
+            <a href="https://subscribe.brillianttv.com/btv-subscription1">
+              <img src="/images/BTV_Logo_Dark.png" className={c.logo} alt="logo" />
+            </a>
           </Box>
         </Hidden>
 
         <Grid container className={c.header} direction="row" wrap="nowrap" alignItems="center" justify="center">
           <Hidden only="xs">
             <Grid item align="left">
-              <a href={"https://subscribe.brillianttv.com/btv-subscription1"}> <img src="/images/BTV_Logo_Dark.png" className={c.logo} alt="logo" /></a>
+              <a href="https://subscribe.brillianttv.com/btv-subscription1">
+                {' '}
+                <img src="/images/BTV_Logo_Dark.png" className={c.logo} alt="logo" />
+              </a>
             </Grid>
 
             <Grid item xs />

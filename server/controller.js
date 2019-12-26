@@ -27,6 +27,19 @@ exports.planDetails = async function(plan) {
   return details;
 };
 
+exports.couponDetails = async function(code) {
+  let details;
+  if (code) {
+    details = details || (await findCoupon(code));
+    details = details || (await findCoupon(code.toLowerCase()));
+    details = details || (await findCoupon(code.toUpperCase()));
+  }
+  if (!details || !details.valid) {
+    throw createError(404, 'Coupon not found');
+  }
+  return details;
+};
+
 exports.signup = async function(metadata) {
   if (!metadata) {
     throw new Error('metadata missing');
@@ -43,14 +56,16 @@ exports.signup = async function(metadata) {
 
   // Reject repeated signup call if there are any pending requests for this user matched by email
   if (pendingSignupRequestsByEmail[metadata.email]) {
-    throw createError(400, 'Please wait, request to signup was already sent and is being processed. You won\'t be charged twice for registration.');
+    throw createError(
+      400,
+      "Please wait, request to signup was already sent and is being processed. You won't be charged twice for registration.",
+    );
   }
 
   // Block signup for requested user (by email) to avoid dupliated charges
   pendingSignupRequestsByEmail[metadata.email] = metadata;
 
   try {
-
     // check if customer is already registered on stripe
     const stripeCustomerAlreadyExists =
       (await stripe.customers.list({
@@ -59,8 +74,14 @@ exports.signup = async function(metadata) {
       })).data.length > 0;
 
     if (stripeCustomerAlreadyExists) {
-      throw createError(400, 'You have already been subscribed previously, payment declined. Please proceed to login page or contact customer support.');
+      throw createError(
+        400,
+        'You must have been already subscribed, payment declined. Please proceed to login page or contact customer support.',
+      );
     }
+
+    // check whether coupon is valid and retrieve details
+    const coupon = metadata.couponCode ? await this.couponDetails(metadata.couponCode) : undefined;
 
     // create stripe customer
     let stripeCustomer = null;
@@ -92,6 +113,7 @@ exports.signup = async function(metadata) {
       customer: stripeCustomer.id,
       collection_method: 'charge_automatically',
       items: [{ plan: getPlanId(metadata.plan) }],
+      coupon: coupon ? coupon.id : undefined,
     };
     try {
       stripeSubscription = await stripe.subscriptions.create(stripeSubscriptionMetadata);
@@ -129,7 +151,6 @@ exports.signup = async function(metadata) {
     console.log('Signup complete', { ...metadata, password: null }); // cloak password
 
     return { stripeCustomer, stripeSubscription, vhxCustomer };
-
   } finally {
     pendingSignupRequestsByEmail[metadata.email] = null;
   }
@@ -147,5 +168,20 @@ function getPlanId(name) {
       return process.env.STRIPE_YEARLY_147_PLAN_ID;
     case 'monthly':
       return process.env.STRIPE_MONTHLY_PLAN_ID;
+  }
+}
+
+async function findCoupon(code) {
+  try {
+    const details = await stripe.coupons.retrieve(code);
+    return details;
+  } catch (err) {
+    if (err.statusCode === 404) {
+      return null;
+    }
+    if (err.statusCode >= 400) {
+      throw createError(err.statusCode, 'Failed to retrieve coupon details');
+    }
+    throw err;
   }
 }

@@ -2,7 +2,8 @@ const express = require('express');
 // const router = express.Router();
 const router = require('express-promise-router')();
 const createError = require('http-errors');
-const cache = require('apicache').middleware;
+const apicache = require('apicache');
+const cache = apicache.middleware;
 
 const controller = require('./controller');
 const { parseSignupMetadata } = require('./middlewares');
@@ -22,7 +23,7 @@ router.get('/config/:plan', cache('1 hour'), async (req, res) => {
     res.json({ ...config, plan });
   } catch (err) {
     console.error('Error', err);
-    throw createError(500, 'Failed to provide environment config along with stripe plan.');
+    throw createError(err.status || 500, 'Failed to provide environment config along with stripe plan.');
   }
 });
 
@@ -32,8 +33,26 @@ router.get('/plan/:name', cache('1 hour'), async (req, res) => {
     res.json(plan);
   } catch (err) {
     console.error('Error', err);
-    throw createError(500, 'Failed to provide stripe plan details.');
+    throw createError(err.status || 500, 'Failed to provide stripe plan details.');
   }
+});
+
+router.get('/coupon/:code', cache('1 hour'), async (req, res) => {
+  try {
+    const coupon = await controller.couponDetails(req.params.code);
+    res.json(coupon);
+  } catch (err) {
+    if (err && err.status >= 400) {
+      throw err;
+    } else {
+      throw createError(err.status || 500, 'Failed to provide stripe coupon details.');
+    }
+  }
+});
+
+router.get('/cache/invalidate', async (req, res) => {
+  apicache.clear();
+  res.send('done');
 });
 
 // router.post('/signup', (req, res) => {
@@ -50,8 +69,11 @@ router.post('/signup', parseSignupMetadata, async (req, res) => {
     if (err && err.status >= 400) {
       throw err;
     } else {
-      throw createError(500, 'Failed to register new user, credit card was not charged. Please contact customer support.');
-    }    
+      throw createError(
+        500,
+        'Failed to register new user, credit card was not charged. Please contact customer support.',
+      );
+    }
   }
 });
 

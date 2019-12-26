@@ -1,7 +1,8 @@
 // @flow
 
-import { Box, Button, Checkbox, FormControlLabel, Grid, Typography } from '@material-ui/core';
+import { Box, Button, Checkbox, FormControlLabel, Grid, Link, Typography } from '@material-ui/core';
 import { withStyles } from '@material-ui/core/styles';
+import pluralize from 'pluralize';
 import React, { Component } from 'react';
 import { InjectedProps, injectStripe } from 'react-stripe-elements';
 import validate from 'validate.js';
@@ -9,6 +10,7 @@ import validate from 'validate.js';
 import environment from '../../config/environment';
 import { PadlockIcon } from '../../icons';
 import constraints from '../../services/validation/constraints';
+import { formatCurrency } from '../../utilities/formatter';
 import FeedbackSnackbarContent from '../FeedbackSnackbarContent';
 import StripeCardsSection from '../StripeCardsSection';
 import TextField from '../TextField';
@@ -22,6 +24,9 @@ type State = {
   fullName: string,
   password: string,
   passwordConfirmation: string,
+  promptCoupon: boolean,
+  couponCode: string,
+  couponDetails: Object,
   marketingOptIn: boolean,
   plan: string,
 
@@ -49,6 +54,35 @@ const styles = (theme) => ({
   },
   marketingOptIn: {
     fontWeight: 600,
+  },
+  promptCouponClickHereLink: {
+    cursor: 'pointer',
+    marginLeft: theme.spacing(1),
+    textDecoration: 'underline',
+    '&:hover': {
+      textDecoration: 'none',
+    },
+  },
+  applyCouponContainer: {
+    marginLeft: theme.spacing(1),
+    alignSelf: 'flex-end',
+  },
+  couponAppliedContainer: {
+    backgroundColor: '#f2f9f1',
+    border: '1px dashed green',
+    color: 'green',
+    fontSize: '16px',
+    fontWeight: 600,
+    padding: theme.spacing(2),
+    textAlign: 'center',
+  },
+  couponApplied: {
+    border: '1px solid green',
+    marginTop: theme.spacing(1),
+    padding: theme.spacing(1, 2),
+  },
+  feedback: {
+    textAlign: 'left',
   },
   register: {
     backgroundColor: '#35BA0D',
@@ -85,6 +119,9 @@ class CheckoutForm extends Component<Props, State> {
       fullName: '',
       password: '',
       passwordConfirmation: '',
+      promptCoupon: false,
+      couponCode: '',
+      couponDetails: null,
       marketingOptIn: false,
       plan: '',
 
@@ -105,6 +142,45 @@ class CheckoutForm extends Component<Props, State> {
     this.setState({ plan });
   }
 
+  handlePromptCouponClick = () => {
+    this.setState({ promptCoupon: true });
+  };
+
+  handleApplyCouponClick = async () => {
+    const { couponCode, couponDetails } = this.state;
+
+    if (!couponCode || (couponDetails && couponCode === couponDetails.id)) {
+      this.setState({ promptCoupon: false });
+      return;
+    }
+
+    this.setState(
+      {
+        performingAction: true,
+        couponDetails: null,
+        serverError: '',
+      },
+      async () => {
+        const response = await fetch(`${environment.REACT_APP_BACKEND_URL}/coupon/${encodeURIComponent(couponCode)}`, {
+          method: 'GET',
+          headers: {
+            Accept: 'application/json',
+          },
+        });
+
+        if (response.ok) {
+          const content = await response.json();
+          this.setState({ performingAction: false, promptCoupon: false, couponDetails: content });
+        } else {
+          const content = await response.json();
+          const error = (content && content.message) || response.statusText;
+          console.error('Coupon Error', error);
+          this.setState({ performingAction: false, serverError: error });
+        }
+      },
+    );
+  };
+
   handlePurchaseClick = () => {
     const errors = this.validateForm();
 
@@ -123,7 +199,7 @@ class CheckoutForm extends Component<Props, State> {
         },
         async () => {
           const { stripe, onComplete } = this.props;
-          const { fullName, emailAddress, password, marketingOptIn, plan } = this.state;
+          const { fullName, emailAddress, password, couponCode, marketingOptIn, plan } = this.state;
           const { token } = await stripe.createToken({ name: fullName });
 
           if (!token) {
@@ -136,6 +212,7 @@ class CheckoutForm extends Component<Props, State> {
             name: fullName,
             email: emailAddress,
             password,
+            couponCode,
             marketingOptIn,
             plan,
           };
@@ -172,6 +249,12 @@ class CheckoutForm extends Component<Props, State> {
         this.validateField(fieldName, value);
       }
     });
+  };
+
+  handleCouponFieldKeyPress = (event) => {
+    if (event.key === 'Enter') {
+      this.handleApplyCouponClick();
+    }
   };
 
   handleFieldCheck = (fieldName) => (event) => {
@@ -239,6 +322,29 @@ class CheckoutForm extends Component<Props, State> {
     this.setState({ serverError: '' });
   };
 
+  renderAppliedCoupon({ couponCode, couponDetails }) {
+    const { classes: c } = this.props;
+
+    return (
+      <Box my={2} align="center" className={c.couponAppliedContainer}>
+        <Box className={c.couponAppliedDetails}>
+          {couponCode} -{' '}
+          {couponDetails.amount_off
+            ? `${formatCurrency(couponDetails.amount_off / 100)} OFF`
+            : `${couponDetails.percent_off}% OFF`}{' '}
+          {couponDetails.duration === 'forever'
+            ? ''
+            : couponDetails.duration === 'once'
+            ? 'FOR FIRST PAYMENT'
+            : couponDetails.duration === 'repeating'
+            ? `FOR NEXT ${pluralize('month', couponDetails.duration_in_months, true).toUpperCase()}`
+            : ''}
+        </Box>
+        <Box className={c.couponApplied}>COUPON APPLIED</Box>
+      </Box>
+    );
+  }
+
   render() {
     const { classes: c } = this.props;
 
@@ -249,6 +355,9 @@ class CheckoutForm extends Component<Props, State> {
       emailAddress,
       password,
       passwordConfirmation,
+      promptCoupon,
+      couponCode,
+      couponDetails,
       marketingOptIn,
 
       errors,
@@ -261,6 +370,7 @@ class CheckoutForm extends Component<Props, State> {
         <Typography align="left" variant="h6" color="primary" className={c.formHeader}>
           BrilliantTV Account Information
         </Typography>
+
         <Grid item container direction="column" className={c.grid}>
           <Grid item className={c.grid}>
             <TextField
@@ -333,13 +443,64 @@ class CheckoutForm extends Component<Props, State> {
         <Typography variant="h6" color="primary" className={c.formHeader}>
           Payment Information
         </Typography>
+
         <Grid item container direction="column" className={c.grid}>
           <StripeCardsSection showError={showErrors} />
         </Grid>
 
+        {!promptCoupon && !couponDetails && (
+          <Box my={2}>
+            <Typography variant="subtitle1" align="left" className={c.promptCoupon}>
+              Have a coupon?
+              <Link onClick={this.handlePromptCouponClick} className={c.promptCouponClickHereLink}>
+                Click here to enter your code
+              </Link>
+            </Typography>
+          </Box>
+        )}
+
+        {promptCoupon && (
+          <Grid item container direction="row" className={c.grid}>
+            <Grid item xs>
+              <TextField
+                autoFocus
+                className={c.textField}
+                disabled={performingAction}
+                fullWidth
+                label="Coupon Code"
+                onChange={this.handleFieldChange('couponCode')}
+                onKeyPress={this.handleCouponFieldKeyPress}
+                readOnly={performingAction}
+                type="text"
+                value={couponCode}
+                variant="filled"
+              />
+            </Grid>
+            <Grid item className={c.applyCouponContainer}>
+              <Button
+                aria-label="click to apply coupon code"
+                className={c.applyCoupon}
+                color="secondary"
+                disabled={(couponCode && couponDetails && couponCode === couponDetails.id) || performingAction}
+                onClick={this.handleApplyCouponClick}
+                variant="contained"
+              >
+                Apply
+              </Button>
+            </Grid>
+          </Grid>
+        )}
+
+        {!promptCoupon && couponDetails && this.renderAppliedCoupon({ couponCode, couponDetails })}
+
         {serverError && (
           <Box my={2}>
-            <FeedbackSnackbarContent variant="error" message={serverError} onClose={this.handleFeedbackClose} />
+            <FeedbackSnackbarContent
+              className={c.feedback}
+              variant="error"
+              message={serverError}
+              onClose={this.handleFeedbackClose}
+            />
           </Box>
         )}
 
@@ -381,6 +542,7 @@ class CheckoutForm extends Component<Props, State> {
           <img src="/icons/payment/american-express.png" className={c.paymentTypeIcon} alt="americal express card" />
           <img src="/icons/payment/discover.png" className={c.paymentTypeIcon} alt="discover card" />
         </Box>
+
         <Typography color="textSecondary" component="small">
           <PadlockIcon className={c.padlock} height="12" />
           100% Safe &amp; Secure Payment

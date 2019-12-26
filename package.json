@@ -3,20 +3,22 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "preinstall": "node tools/preinstall-script.js",
     "start": "(react-scripts start | cat) & (nodemon --watch server server/index.js)",
     "start:build": "nodemon --watch server server/index.js",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "flow": "flow",
+    "autofix": "yarn format; yarn lint:fix",
     "format": "prettier --write \"{src,server}/**/*.{js,jsx,ts,tsx,json,css,scss,md}\"",
     "lint": "eslint src",
     "lint:fix": "eslint --fix src",
     "heroku-postbuild": "yarn install --production=false; yarn install; yarn build"
   },
   "engines": {
-    "node": "12.3.1",
-    "yarn": "1.15.2"
+    "node": "^12.3.1",
+    "yarn": "^1.15.2"
   },
   "proxy": "http://localhost:5000",
   "husky": {
@@ -59,6 +61,7 @@
     "http-errors": "^1.7.3",
     "morgan": "^1.9.1",
     "paymentfont": "^1.2.5",
+    "pluralize": "^8.0.0",
     "prop-types": "^15.7.2",
     "react": "^16.11.0",
     "react-dom": "^16.11.0",
