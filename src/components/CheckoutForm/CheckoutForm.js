@@ -251,9 +251,11 @@ class CheckoutForm extends Component<Props, State> {
     });
   };
 
-  handleCouponFieldKeyPress = (event) => {
+  handleCouponFieldKeyDown = (event) => {
     if (event.key === 'Enter') {
       this.handleApplyCouponClick();
+    } else if (event.key === 'Escape') {
+      this.setState({ promptCoupon: false, couponCode: '' });
     }
   };
 
@@ -469,7 +471,7 @@ class CheckoutForm extends Component<Props, State> {
                 fullWidth
                 label="Coupon Code"
                 onChange={this.handleFieldChange('couponCode')}
-                onKeyPress={this.handleCouponFieldKeyPress}
+                onKeyDown={this.handleCouponFieldKeyDown}
                 readOnly={performingAction}
                 type="text"
                 value={couponCode}
