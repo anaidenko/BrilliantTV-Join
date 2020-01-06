@@ -419,7 +419,10 @@ class CheckoutForm extends Component<Props, State> {
               aria-label="click to apply coupon code"
               className={c.applyCoupon}
               color="secondary"
-              disabled={(couponCode && couponDetails && couponCode === couponDetails.id) || performingAction}
+              disabled={
+                (couponCode && couponDetails && couponCode.toUpperCase() === couponDetails.id.toUpperCase()) ||
+                performingAction
+              }
               onClick={this.handleApplyCouponClick}
               variant="contained"
             >
