@@ -2,6 +2,7 @@
 
 import { Box, Button, Checkbox, FormControlLabel, Grid, Typography } from '@material-ui/core';
 import { withStyles } from '@material-ui/core/styles';
+import classNames from 'classnames';
 import React, { Component } from 'react';
 import { InjectedProps, injectStripe } from 'react-stripe-elements';
 import validate from 'validate.js';
@@ -54,9 +55,14 @@ const styles = (theme) => ({
   marketingOptIn: {
     fontWeight: 600,
   },
+  couponCodeContainer: {
+    alignItems: 'flex-start',
+  },
   applyCouponContainer: {
-    marginLeft: theme.spacing(1),
-    alignSelf: 'flex-end',
+    alignSelf: 'flex-start',
+    display: 'flex',
+    marginTop: 22,
+    marginLeft: theme.spacing(2),
   },
   feedback: {
     textAlign: 'left',
@@ -399,7 +405,7 @@ class CheckoutForm extends Component<Props, State> {
           <StripeCardsSection showError={showErrors} />
         </Grid>
 
-        <Grid item container direction="row" className={c.grid}>
+        <Grid item container direction="row" className={classNames(c.grid, c.couponCodeContainer)}>
           <Grid item xs>
             <TextField
               className={c.textField}
@@ -420,6 +426,7 @@ class CheckoutForm extends Component<Props, State> {
               className={c.applyCoupon}
               color="secondary"
               disabled={
+                !couponCode ||
                 (couponCode && couponDetails && couponCode.toUpperCase() === couponDetails.id.toUpperCase()) ||
                 performingAction
               }
