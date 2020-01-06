@@ -5,8 +5,8 @@ import { withStyles } from '@material-ui/core/styles';
 import React, { Component } from 'react';
 
 import environment from '../../config/environment';
-import PriceTag from '../PriceTag';
 import { CheckIcon } from '../../icons';
+import PriceTag from '../PriceTag';
 
 const styles = (theme) => ({
   root: {
@@ -132,7 +132,7 @@ class CheckoutDetails extends Component<Props, State> {
         <Box mt={2} mb={4}>
           <Typography>Access everything for only</Typography>
           <Typography variant="h6" className={c.todayPrice}>
-            Today only <PriceTag amount={planDetails.amount / 100} interval={planDetails.interval}></PriceTag>
+            Today only <PriceTag amount={planDetails.amount / 100} interval={planDetails.interval} />
           </Typography>
         </Box>
         <img src="/images/Satisfaction_Guaranteed.png" width="218" height="184" alt="satisfaction guaranteed" />

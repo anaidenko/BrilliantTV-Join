@@ -1,14 +1,13 @@
 // @flow
 
-import React, { Component } from 'react';
-import { withStyles } from '@material-ui/core/styles';
 import { Box } from '@material-ui/core';
-
+import { withStyles } from '@material-ui/core/styles';
 import classNames from 'classnames';
 import pluralize from 'pluralize';
+import React, { Component } from 'react';
 
-import PriceTag from '../PriceTag';
 import * as formatter from '../../utilities/formatter';
+import PriceTag from '../PriceTag';
 
 type Props = {
   classes: Object,
@@ -48,11 +47,11 @@ class CouponApplied extends Component<Props> {
   calculatePriceAfterCoupon(price: number, coupon: Object): number {
     if (coupon.amount_off) {
       return price - coupon.amount_off / 100;
-    } else if (coupon.percent_off) {
-      return price * (1 - coupon.percent_off / 100);
-    } else {
-      return price;
     }
+    if (coupon.percent_off) {
+      return price * (1 - coupon.percent_off / 100);
+    }
+    return price;
   }
 
   render() {
@@ -63,7 +62,7 @@ class CouponApplied extends Component<Props> {
 
     const originalPrice = plan.amount / 100;
     const salePrice = this.calculatePriceAfterCoupon(originalPrice, coupon);
-    const interval = plan.interval;
+    const { interval } = plan;
 
     return (
       <Box my={2} align="center" className={c.root}>
@@ -85,8 +84,8 @@ class CouponApplied extends Component<Props> {
             className={classNames(c.originalPrice, c.strikethrough)}
             amount={originalPrice}
             interval={interval}
-          ></PriceTag>
-          <PriceTag className={c.salePrice} amount={salePrice} interval={interval}></PriceTag>
+          />
+          <PriceTag className={c.salePrice} amount={salePrice} interval={interval} />
         </Box>
       </Box>
     );

@@ -9,8 +9,8 @@ import validate from 'validate.js';
 import environment from '../../config/environment';
 import { PadlockIcon } from '../../icons';
 import constraints from '../../services/validation/constraints';
-import FeedbackSnackbarContent from '../FeedbackSnackbarContent';
 import CouponApplied from '../CouponApplied';
+import FeedbackSnackbarContent from '../FeedbackSnackbarContent';
 import StripeCardsSection from '../StripeCardsSection';
 import TextField from '../TextField';
 
@@ -428,7 +428,7 @@ class CheckoutForm extends Component<Props, State> {
           </Grid>
         </Grid>
 
-        <CouponApplied plan={planDetails} coupon={couponDetails}></CouponApplied>
+        <CouponApplied plan={planDetails} coupon={couponDetails} />
 
         {serverError && (
           <Box my={2}>

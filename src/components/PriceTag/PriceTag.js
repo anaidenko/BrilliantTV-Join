@@ -1,18 +1,20 @@
 // @flow
 
-import React, { Component } from 'react';
-import { withStyles } from '@material-ui/core/styles';
 import { Box } from '@material-ui/core';
-import * as formatter from '../../utilities/formatter';
+import { withStyles } from '@material-ui/core/styles';
 import classNames from 'classnames';
+import React, { Component } from 'react';
 
-const styles = (theme) => ({
+import * as formatter from '../../utilities/formatter';
+
+const styles = () => ({
   root: {},
 });
 
 type Props = {
   classes: Object,
-  amount: Number,
+  className: String,
+  amount: Number | String,
   interval?: string,
 };
 
@@ -31,13 +33,13 @@ class PriceTag extends Component<Props> {
   }
 
   render() {
-    const { classes: c, amount, interval } = this.props;
+    const { classes: c, className, amount, interval } = this.props;
 
     const amountFormatted = formatter.formatCurrency(amount);
     const intervalFormatted = amountFormatted !== '' && interval ? this.formatInterval(interval) : '';
 
     return (
-      <Box component="span" className={classNames(c.root, this.props.className)}>
+      <Box component="span" className={classNames(c.root, className)}>
         {amountFormatted && (
           <>
             {amountFormatted}/{intervalFormatted}
@@ -47,5 +49,9 @@ class PriceTag extends Component<Props> {
     );
   }
 }
+
+PriceTag.defaultProps = {
+  interval: '',
+};
 
 export default withStyles(styles, { withTheme: true })(PriceTag);
