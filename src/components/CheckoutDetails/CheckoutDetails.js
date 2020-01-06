@@ -5,6 +5,7 @@ import { withStyles } from '@material-ui/core/styles';
 import React, { Component } from 'react';
 
 import environment from '../../config/environment';
+import PriceTag from '../PriceTag';
 import { CheckIcon } from '../../icons';
 
 const styles = (theme) => ({
@@ -61,8 +62,7 @@ type Props = {
 type State = {
   features: Object[],
   plan: string,
-  price: string,
-  interval: string,
+  planDetails: Object,
 };
 
 class CheckoutDetails extends Component<Props, State> {
@@ -71,6 +71,7 @@ class CheckoutDetails extends Component<Props, State> {
 
     this.state = {
       ...this.state,
+      planDetails: {},
       features: [
         { name: 'Exclusive, weekly mentoring videos', price: '$4375' },
         { name: 'Access the entire Brilliant TV Library', price: '$1900' },
@@ -87,31 +88,10 @@ class CheckoutDetails extends Component<Props, State> {
     } = this.props;
 
     const plan = (params.plan || 'yearly').trim().toLowerCase();
-    const price = this.formatCurrency(environment.plan.amount / 100);
-    const interval = this.formatInterval(environment.plan.interval);
+    const planDetails = environment.plan;
 
-    this.setState({ plan, price, interval });
+    this.setState({ plan, planDetails });
   }
-
-  formatInterval = (interval) => {
-    switch (interval) {
-      case 'year':
-        return 'year';
-      case 'month':
-        return 'mo';
-      default:
-        return interval;
-    }
-  };
-
-  formatCurrency = (input: number | string): string => {
-    const value = typeof input === 'string' ? Number(input) : input;
-    if (typeof value !== 'number' || Number.isNaN(value)) {
-      return '';
-    }
-    const formattedValue = `$${value.toFixed(2).replace(/[,.]00$/, '')}`;
-    return formattedValue;
-  };
 
   renderFeatureItem(feature, key) {
     const { classes: c } = this.props;
@@ -136,7 +116,7 @@ class CheckoutDetails extends Component<Props, State> {
 
   render() {
     const { classes: c } = this.props;
-    const { features, price, interval } = this.state;
+    const { features, planDetails } = this.state;
 
     return (
       <Box className={c.root}>
@@ -152,7 +132,7 @@ class CheckoutDetails extends Component<Props, State> {
         <Box mt={2} mb={4}>
           <Typography>Access everything for only</Typography>
           <Typography variant="h6" className={c.todayPrice}>
-            Today only {price}/{interval}
+            Today only <PriceTag amount={planDetails.amount / 100} interval={planDetails.interval}></PriceTag>
           </Typography>
         </Box>
         <img src="/images/Satisfaction_Guaranteed.png" width="218" height="184" alt="satisfaction guaranteed" />

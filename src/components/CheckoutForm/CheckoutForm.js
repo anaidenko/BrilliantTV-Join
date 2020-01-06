@@ -1,8 +1,7 @@
 // @flow
 
-import { Box, Button, Checkbox, FormControlLabel, Grid, Link, Typography } from '@material-ui/core';
+import { Box, Button, Checkbox, FormControlLabel, Grid, Typography } from '@material-ui/core';
 import { withStyles } from '@material-ui/core/styles';
-import pluralize from 'pluralize';
 import React, { Component } from 'react';
 import { InjectedProps, injectStripe } from 'react-stripe-elements';
 import validate from 'validate.js';
@@ -10,8 +9,8 @@ import validate from 'validate.js';
 import environment from '../../config/environment';
 import { PadlockIcon } from '../../icons';
 import constraints from '../../services/validation/constraints';
-import { formatCurrency } from '../../utilities/formatter';
 import FeedbackSnackbarContent from '../FeedbackSnackbarContent';
+import CouponApplied from '../CouponApplied';
 import StripeCardsSection from '../StripeCardsSection';
 import TextField from '../TextField';
 
@@ -24,11 +23,11 @@ type State = {
   fullName: string,
   password: string,
   passwordConfirmation: string,
-  promptCoupon: boolean,
   couponCode: string,
   couponDetails: Object,
   marketingOptIn: boolean,
   plan: string,
+  planDetails: Object,
 
   performingAction: boolean,
   errors: Object,
@@ -55,31 +54,9 @@ const styles = (theme) => ({
   marketingOptIn: {
     fontWeight: 600,
   },
-  promptCouponClickHereLink: {
-    cursor: 'pointer',
-    marginLeft: theme.spacing(1),
-    textDecoration: 'underline',
-    '&:hover': {
-      textDecoration: 'none',
-    },
-  },
   applyCouponContainer: {
     marginLeft: theme.spacing(1),
     alignSelf: 'flex-end',
-  },
-  couponAppliedContainer: {
-    backgroundColor: '#f2f9f1',
-    border: '1px dashed green',
-    color: 'green',
-    fontSize: '16px',
-    fontWeight: 600,
-    padding: theme.spacing(2),
-    textAlign: 'center',
-  },
-  couponApplied: {
-    border: '1px solid green',
-    marginTop: theme.spacing(1),
-    padding: theme.spacing(1, 2),
   },
   feedback: {
     textAlign: 'left',
@@ -119,11 +96,11 @@ class CheckoutForm extends Component<Props, State> {
       fullName: '',
       password: '',
       passwordConfirmation: '',
-      promptCoupon: false,
       couponCode: '',
       couponDetails: null,
       marketingOptIn: false,
       plan: '',
+      planDetails: environment.plan,
 
       performingAction: false,
       errors: null,
@@ -142,15 +119,10 @@ class CheckoutForm extends Component<Props, State> {
     this.setState({ plan });
   }
 
-  handlePromptCouponClick = () => {
-    this.setState({ promptCoupon: true });
-  };
-
   handleApplyCouponClick = async () => {
     const { couponCode, couponDetails } = this.state;
 
     if (!couponCode || (couponDetails && couponCode === couponDetails.id)) {
-      this.setState({ promptCoupon: false });
       return;
     }
 
@@ -170,7 +142,7 @@ class CheckoutForm extends Component<Props, State> {
 
         if (response.ok) {
           const content = await response.json();
-          this.setState({ performingAction: false, promptCoupon: false, couponDetails: content });
+          this.setState({ performingAction: false, couponDetails: content });
         } else {
           const content = await response.json();
           const error = (content && content.message) || response.statusText;
@@ -255,7 +227,7 @@ class CheckoutForm extends Component<Props, State> {
     if (event.key === 'Enter') {
       this.handleApplyCouponClick();
     } else if (event.key === 'Escape') {
-      this.setState({ promptCoupon: false, couponCode: '' });
+      this.setState({ couponCode: '' });
     }
   };
 
@@ -324,29 +296,6 @@ class CheckoutForm extends Component<Props, State> {
     this.setState({ serverError: '' });
   };
 
-  renderAppliedCoupon({ couponCode, couponDetails }) {
-    const { classes: c } = this.props;
-
-    return (
-      <Box my={2} align="center" className={c.couponAppliedContainer}>
-        <Box className={c.couponAppliedDetails}>
-          {couponCode} -{' '}
-          {couponDetails.amount_off
-            ? `${formatCurrency(couponDetails.amount_off / 100)} OFF`
-            : `${couponDetails.percent_off}% OFF`}{' '}
-          {couponDetails.duration === 'forever'
-            ? ''
-            : couponDetails.duration === 'once'
-            ? 'FOR FIRST PAYMENT'
-            : couponDetails.duration === 'repeating'
-            ? `FOR NEXT ${pluralize('month', couponDetails.duration_in_months, true).toUpperCase()}`
-            : ''}
-        </Box>
-        <Box className={c.couponApplied}>COUPON APPLIED</Box>
-      </Box>
-    );
-  }
-
   render() {
     const { classes: c } = this.props;
 
@@ -357,10 +306,10 @@ class CheckoutForm extends Component<Props, State> {
       emailAddress,
       password,
       passwordConfirmation,
-      promptCoupon,
       couponCode,
       couponDetails,
       marketingOptIn,
+      planDetails,
 
       errors,
       serverError,
@@ -450,50 +399,36 @@ class CheckoutForm extends Component<Props, State> {
           <StripeCardsSection showError={showErrors} />
         </Grid>
 
-        {!promptCoupon && !couponDetails && (
-          <Box my={2}>
-            <Typography variant="subtitle1" align="left" className={c.promptCoupon}>
-              Have a coupon?
-              <Link onClick={this.handlePromptCouponClick} className={c.promptCouponClickHereLink}>
-                Click here to enter your code
-              </Link>
-            </Typography>
-          </Box>
-        )}
-
-        {promptCoupon && (
-          <Grid item container direction="row" className={c.grid}>
-            <Grid item xs>
-              <TextField
-                autoFocus
-                className={c.textField}
-                disabled={performingAction}
-                fullWidth
-                label="Coupon Code"
-                onChange={this.handleFieldChange('couponCode')}
-                onKeyDown={this.handleCouponFieldKeyDown}
-                readOnly={performingAction}
-                type="text"
-                value={couponCode}
-                variant="filled"
-              />
-            </Grid>
-            <Grid item className={c.applyCouponContainer}>
-              <Button
-                aria-label="click to apply coupon code"
-                className={c.applyCoupon}
-                color="secondary"
-                disabled={(couponCode && couponDetails && couponCode === couponDetails.id) || performingAction}
-                onClick={this.handleApplyCouponClick}
-                variant="contained"
-              >
-                Apply
-              </Button>
-            </Grid>
+        <Grid item container direction="row" className={c.grid}>
+          <Grid item xs>
+            <TextField
+              className={c.textField}
+              disabled={performingAction}
+              fullWidth
+              label="Coupon Code (optional)"
+              onChange={this.handleFieldChange('couponCode')}
+              onKeyDown={this.handleCouponFieldKeyDown}
+              readOnly={performingAction}
+              type="text"
+              value={couponCode}
+              variant="filled"
+            />
           </Grid>
-        )}
+          <Grid item className={c.applyCouponContainer}>
+            <Button
+              aria-label="click to apply coupon code"
+              className={c.applyCoupon}
+              color="secondary"
+              disabled={(couponCode && couponDetails && couponCode === couponDetails.id) || performingAction}
+              onClick={this.handleApplyCouponClick}
+              variant="contained"
+            >
+              Apply
+            </Button>
+          </Grid>
+        </Grid>
 
-        {!promptCoupon && couponDetails && this.renderAppliedCoupon({ couponCode, couponDetails })}
+        <CouponApplied plan={planDetails} coupon={couponDetails}></CouponApplied>
 
         {serverError && (
           <Box my={2}>

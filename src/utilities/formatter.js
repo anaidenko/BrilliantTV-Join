@@ -1,7 +1,8 @@
 export function formatCurrency(amount) {
-  const value = Number(amount);
-  if (Number.isNaN(value)) {
+  const value = typeof amount === 'string' ? Number(amount) : amount;
+  if (typeof value !== 'number' || Number.isNaN(value)) {
     return '';
   }
-  return `$${value.toFixed(2).replace('.00', '')}`;
+  const formattedValue = `$${value.toFixed(2).replace('.00', '')}`;
+  return formattedValue;
 }
