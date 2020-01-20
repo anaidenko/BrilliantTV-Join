@@ -104,6 +104,8 @@ class SignupPage extends Component<Props, State> {
     const { planSlug } = this.state;
     if (['annual-147', 'annual-$147', 'yearly-147', 'yearly-$147'].includes(planSlug)) {
       window.location = `${environment.SIGNUP_THANK_YOU_SITE_URL || 'https://subscribe.brillianttv.com'}/thank-you-97`;
+    } else if (planSlug === 'monthly') {
+      window.location = `${environment.SIGNUP_THANK_YOU_SITE_URL || 'https://subscribe.brillianttv.com'}/thank-you-20`;
     } else {
       window.location = environment.SIGNUP_SUCCESS_PAGE || 'https://subscribe.brillianttv.com/welcome';
     }
