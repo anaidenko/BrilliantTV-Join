@@ -77,13 +77,41 @@ type Props = {
   match: Object,
 };
 
-class SignupPage extends Component<Props> {
+type State = {
+  planSlug: String,
+  planDetails: Object,
+};
+
+class SignupPage extends Component<Props, State> {
+  constructor() {
+    super();
+
+    this.state = {};
+  }
+
+  componentDidMount() {
+    const {
+      match: { params },
+    } = this.props;
+
+    const planSlug = (params.plan || 'yearly').trim().toLowerCase();
+    const planDetails = environment.plan;
+
+    this.setState({ planSlug, planDetails });
+  }
+
   handlePaymentComplete = () => {
-    window.location = environment.SIGNUP_SUCCESS_PAGE || 'https://subscribe.brillianttv.com/welcome';
+    const { planSlug } = this.state;
+    if (['annual-147', 'annual-$147', 'yearly-147', 'yearly-$147'].includes(planSlug)) {
+      window.location = `${environment.SIGNUP_THANK_YOU_SITE_URL || 'https://subscribe.brillianttv.com'}/thank-you-97`;
+    } else {
+      window.location = environment.SIGNUP_SUCCESS_PAGE || 'https://subscribe.brillianttv.com/welcome';
+    }
   };
 
   render() {
-    const { classes: c, match } = this.props;
+    const { classes: c } = this.props;
+    const { planSlug, planDetails } = this.state;
 
     return (
       <Box className={c.root}>
@@ -151,7 +179,7 @@ class SignupPage extends Component<Props> {
             <Grid item sm container direction="column" className={c.dividerRight}>
               <StripeProvider apiKey={environment.STRIPE_PUBLISHABLE_KEY}>
                 <Elements>
-                  <CheckoutForm match={match} onComplete={this.handlePaymentComplete} />
+                  <CheckoutForm planSlug={planSlug} plan={planDetails} onComplete={this.handlePaymentComplete} />
                 </Elements>
               </StripeProvider>
             </Grid>
@@ -160,7 +188,7 @@ class SignupPage extends Component<Props> {
               <Hidden smUp>
                 <Box mt={2} />
               </Hidden>
-              <CheckoutDetails match={match} plan={environment.plan} />
+              <CheckoutDetails plan={planDetails} />
             </Grid>
           </Grid>
         </Paper>

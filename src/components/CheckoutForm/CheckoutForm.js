@@ -17,6 +17,8 @@ import TextField from '../TextField';
 
 type Props = InjectedProps & {
   onComplete: Function,
+  planSlug: string,
+  plan: Object,
 };
 
 type State = {
@@ -27,8 +29,6 @@ type State = {
   couponCode: string,
   couponDetails: Object,
   marketingOptIn: boolean,
-  plan: string,
-  planDetails: Object,
 
   performingAction: boolean,
   errors: Object,
@@ -105,24 +105,12 @@ class CheckoutForm extends Component<Props, State> {
       couponCode: '',
       couponDetails: null,
       marketingOptIn: false,
-      plan: '',
-      planDetails: environment.plan,
 
       performingAction: false,
       errors: null,
       serverError: '',
       showErrors: false,
     };
-  }
-
-  componentDidMount() {
-    const {
-      match: { params },
-    } = this.props;
-
-    const plan = (params.plan || 'yearly').trim().toLowerCase();
-
-    this.setState({ plan });
   }
 
   handleApplyCouponClick = async () => {
@@ -176,8 +164,8 @@ class CheckoutForm extends Component<Props, State> {
           showErrors: true,
         },
         async () => {
-          const { stripe, onComplete } = this.props;
-          const { fullName, emailAddress, password, couponCode, marketingOptIn, plan } = this.state;
+          const { planSlug, stripe, onComplete } = this.props;
+          const { fullName, emailAddress, password, couponCode, marketingOptIn } = this.state;
           const { token } = await stripe.createToken({ name: fullName });
 
           if (!token) {
@@ -192,7 +180,7 @@ class CheckoutForm extends Component<Props, State> {
             password,
             couponCode,
             marketingOptIn,
-            plan,
+            plan: planSlug,
           };
           const response = await fetch(`${environment.REACT_APP_BACKEND_URL}/signup`, {
             method: 'POST',
@@ -303,7 +291,7 @@ class CheckoutForm extends Component<Props, State> {
   };
 
   render() {
-    const { classes: c } = this.props;
+    const { classes: c, plan } = this.props;
 
     const {
       performingAction,
@@ -315,7 +303,6 @@ class CheckoutForm extends Component<Props, State> {
       couponCode,
       couponDetails,
       marketingOptIn,
-      planDetails,
 
       errors,
       serverError,
@@ -438,7 +425,7 @@ class CheckoutForm extends Component<Props, State> {
           </Grid>
         </Grid>
 
-        <CouponApplied plan={planDetails} coupon={couponDetails} />
+        <CouponApplied plan={plan} coupon={couponDetails} />
 
         {serverError && (
           <Box my={2}>
