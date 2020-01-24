@@ -1,3 +1,4 @@
+const createError = require('http-errors');
 const config = require('./config');
 const logger = require('./logger');
 
@@ -23,8 +24,8 @@ class ErrorHandler {
     }
   }
 
-  send(req, res, err, { code, details }) {
-    err = attach(err, { code, details });
+  send(req, res, err, details) {
+    err = attach(err, details);
 
     if (err.inner) {
       // log user-friendly message for tracking purposes
@@ -49,7 +50,10 @@ class ErrorHandler {
 
 // #region Helper Functions
 
-function attach(err, { code, details }) {
+function attach(err, props) {
+  const code = props && props.code;
+  const details = props && props.details;
+
   if (code || details) {
     if (err && err.status >= 400 && err.status < 500) {
       // attach error details to http error
