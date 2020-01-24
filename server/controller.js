@@ -2,6 +2,7 @@ const createError = require('http-errors');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const vhx = require('vhx')(process.env.VHX_API_KEY);
 const util = require('util');
+const logger = require('./logger');
 
 let pendingSignupRequestsByEmail = {};
 
@@ -55,13 +56,14 @@ exports.signup = async function(metadata) {
   }
 
   metadata.plan = metadata.plan.replace('annual', 'yearly');
+  metadata.planId = getPlanId(metadata.plan);
+
+  logger.log('signup', 'Signup requested', { ...metadata, password: '[HIDDEN]' }); // cloak password
 
   // validate
-  if (!getPlanId(metadata.plan)) {
+  if (!metadata.planId) {
     throw new Error(`plan ${metadata.plan} is not configured`);
   }
-
-  console.log('Signup requested', { ...metadata, password: null }); // cloak password
 
   // Reject repeated signup call if there are any pending requests for this user matched by email
   if (pendingSignupRequestsByEmail[metadata.email]) {
@@ -75,14 +77,41 @@ exports.signup = async function(metadata) {
   pendingSignupRequestsByEmail[metadata.email] = metadata;
 
   try {
-    // check if customer is already registered on stripe
-    const stripeCustomerAlreadyExists =
-      (await stripe.customers.list({
-        email: metadata.email,
-        limit: 1,
-      })).data.length > 0;
+    // find a customer on Stripe by email address
+    let stripeCustomer = (await stripe.customers.list({
+      email: metadata.email,
+      limit: 1,
+    })).data[0];
 
-    if (stripeCustomerAlreadyExists) {
+    if (!stripeCustomer) {
+      // if not found, create a new stripe customer
+      const stripeCustomerMetadata = {
+        email: metadata.email,
+        name: metadata.name,
+        source: metadata.stripeToken,
+      };
+
+      try {
+        stripeCustomer = await stripe.customers.create(stripeCustomerMetadata);
+        logger.debug('signup', 'Stripe customer created', stripeCustomer);
+      } catch (err) {
+        logger.error('signup', 'Failed to create Stripe customer', stripeCustomerMetadata);
+        throw err;
+      }
+    }
+
+    // check if customer already subscribed to selected plan
+    const subscriptions = (await stripe.subscriptions.list({
+      customer: stripeCustomer.id,
+      plan: metadata.planId,
+    })).data.filter((item) => item.status !== 'cancelled');
+
+    if (subscriptions.length > 0) {
+      logger.warn(
+        'signup',
+        `Signup cancelled due to existing subscription to ${metadata.plan} plan for the customer ${metadata.name} (${metadata.email}).`,
+        `ID=${subscriptions[0].id}. Status=${subscriptions[0].status}.`,
+      );
       throw createError(
         400,
         'You must have been already subscribed, payment declined. Please proceed to login page or contact customer support.',
@@ -92,46 +121,28 @@ exports.signup = async function(metadata) {
     // check whether coupon is valid and retrieve details
     const coupon = metadata.couponCode ? await this.couponDetails(metadata.couponCode) : undefined;
 
-    // create stripe customer
-    let stripeCustomer = null;
-    const stripeCustomerMetadata = {
-      email: metadata.email,
-      name: metadata.name,
-      source: metadata.stripeToken,
-      metadata: {
-        product: metadata.product,
-        plan: metadata.plan,
-        marketingOptIn: metadata.marketingOptIn,
-      },
-    };
-
-    try {
-      stripeCustomer = await stripe.customers.create(stripeCustomerMetadata);
-
-      if (process.env.DEBUG === 'true') {
-        console.log('Stripe customer created', stripeCustomer);
-      }
-    } catch (err) {
-      console.error('Failed to create Stripe customer', stripeCustomerMetadata);
-      throw err;
-    }
-
     // create stripe subscription
     let stripeSubscription = null;
     const stripeSubscriptionMetadata = {
       customer: stripeCustomer.id,
       collection_method: 'charge_automatically',
-      items: [{ plan: getPlanId(metadata.plan) }],
+      items: [
+        {
+          plan: metadata.planId,
+          metadata: {
+            product: metadata.product,
+            plan: metadata.plan,
+            marketingOptIn: metadata.marketingOptIn,
+          },
+        },
+      ],
       coupon: coupon ? coupon.id : undefined,
     };
     try {
       stripeSubscription = await stripe.subscriptions.create(stripeSubscriptionMetadata);
-
-      if (process.env.DEBUG === 'true') {
-        console.log('Stripe subscription created', stripeSubscription);
-      }
+      logger.debug('signup', 'Stripe subscription created', stripeSubscription);
     } catch (err) {
-      console.error('Failed to create Stripe subscription', stripeSubscriptionMetadata);
+      logger.error('signup', 'Failed to create Stripe subscription', stripeSubscriptionMetadata);
       throw err;
     }
 
@@ -148,16 +159,13 @@ exports.signup = async function(metadata) {
 
     try {
       vhxCustomer = await util.promisify(vhx.customers.create)(vhxCustomerMetadata);
-
-      if (process.env.DEBUG === 'true') {
-        console.log('VHX customer created', vhxCustomer);
-      }
+      logger.debug('signup', 'VHX customer created', vhxCustomer);
     } catch (err) {
-      console.error('Failed to create VHX customer', vhxCustomerMetadata);
+      logger.error('signup', 'Failed to create VHX customer', vhxCustomerMetadata);
       throw err;
     }
 
-    console.log('Signup complete', { ...metadata, password: null }); // cloak password
+    logger.log('signup', 'Signup complete', { ...metadata, subscription: stripeSubscription.id, password: '[HIDDEN]' }); // cloak password
 
     return { stripeCustomer, stripeSubscription, vhxCustomer };
   } finally {

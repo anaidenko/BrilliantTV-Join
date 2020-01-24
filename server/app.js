@@ -4,17 +4,19 @@ const cors = require('cors');
 const morgan = require('morgan');
 const path = require('path');
 const sslRedirect = require('heroku-ssl-redirect');
+const error = require('./error');
+const config = require('./config');
 
-require('./config');
+const { FORCE_HTTPS, DEVELOPMENT } = config;
 
 const app = express();
 
 // Redirect unencrypted HTTP requests to HTTPS on Heroku instances
-if (process.env.FORCE_HTTPS === 'true') {
+if (FORCE_HTTPS) {
   app.use(sslRedirect());
 }
 
-app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
+app.use(morgan(DEVELOPMENT ? 'dev' : 'combined'));
 app.use(bodyParser.json());
 app.use(cors());
 
@@ -25,20 +27,9 @@ app.use('/api', require('./router'));
 
 app.use((err, req, res, next) => {
   if (err && !err.headers) {
-    console.error('Error', err);
+    error.log('app', err);
   }
-  if (err) {
-    res.status(err.statusCode || 500).json({
-      error: true,
-      message: String(err.message || err || 'Internal Server Error'),
-      stack: process.env.DEBUG === 'true' ? err.stack : undefined,
-    });
-  } else {
-    res.status(500).json({
-      error: true,
-      message: 'Internal Server Error',
-    });
-  }
+  error.send(req, res, err);
 });
 
 // Handles any requests that don't match the ones above
