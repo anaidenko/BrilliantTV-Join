@@ -1,3 +1,5 @@
+const createError = require('http-errors');
+
 exports.parseSignupMetadata = (req, res, next) => {
   const body = req.body || {};
 
