@@ -310,7 +310,7 @@ class CheckoutForm extends Component<Props, State> {
     } = this.state;
 
     return (
-      <form className={c.root}>
+      <form className={c.root} onSubmit={(e) => e.preventDefault()}>
         <Typography align="left" variant="h6" color="primary" className={c.formHeader}>
           BrilliantTV Account Information
         </Typography>

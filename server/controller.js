@@ -31,7 +31,7 @@ exports.config = function() {
 exports.planDetails = async function(plan) {
   const planId = getPlanId(plan);
   if (!planId) {
-    throw new Error('plan not found');
+    throw createError(404, 'Plan not found');
   }
   const details = await stripe.plans.retrieve(planId);
   return details;

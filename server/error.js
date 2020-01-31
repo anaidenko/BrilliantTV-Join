@@ -18,7 +18,11 @@ class ErrorHandler {
 
   log(tag, error) {
     if (error && error.status) {
-      logger.error(tag, `[HTTP${error.status}]`, error);
+      if (error.status >= 400 && error.status < 500) {
+        logger.info(tag, `[HTTP${error.status}]`, error);
+      } else {
+        logger.error(tag, `[HTTP${error.status}]`, error);
+      }
     } else {
       logger.error(tag, error);
     }

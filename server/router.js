@@ -70,7 +70,7 @@ router.post('/signup', parseSignupMetadata, async (req, res) => {
 });
 
 router.all('*', (req, res, next) => {
-  next(createError(404, `API not found: ${req.method} ${req.url}`));
+  next(createError(500, `API not found: ${req.method} ${req.url}`));
 });
 
 module.exports = router;
