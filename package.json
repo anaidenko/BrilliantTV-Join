@@ -74,6 +74,7 @@
     "serve": "^11.2.0",
     "stripe": "^7.11.0",
     "validate.js": "^0.13.1",
+    "validator": "^12.2.0",
     "vhx": "^1.8.0"
   },
   "devDependencies": {

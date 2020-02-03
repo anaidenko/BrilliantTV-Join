@@ -4,6 +4,12 @@ const constraints = {
       allowEmpty: false,
     },
 
+    format: {
+      pattern: '[a-z0-9 ]+',
+      flags: 'i',
+      message: '^Full name can contain only letters, numbers, and spaces',
+    },
+
     type: 'string',
   },
 

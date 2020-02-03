@@ -197,10 +197,15 @@ class CheckoutForm extends Component<Props, State> {
               onComplete();
             }
           } else {
-            const content = await response.json();
-            const error = (content && content.message) || response.statusText;
-            console.error('Signup Error', error);
-            this.setState({ performingAction: false, serverError: error });
+            let errorMessage;
+            try {
+              const content = await response.json();
+              errorMessage = (content && content.message) || response.statusText;
+            } catch (error) {
+              errorMessage = 'Server Error. Please try again later.';
+            }
+            console.error('Signup Error', errorMessage);
+            this.setState({ performingAction: false, serverError: errorMessage });
           }
         },
       );

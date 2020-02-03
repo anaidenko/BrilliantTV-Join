@@ -1,4 +1,6 @@
 const createError = require('http-errors');
+const validator = require('validator');
+const services = require('./services');
 
 exports.parseSignupMetadata = (req, res, next) => {
   const body = req.body || {};
@@ -15,15 +17,30 @@ exports.parseSignupMetadata = (req, res, next) => {
     plan: body.plan || 'yearly',
   };
 
+  // normalize
+  metadata.plan = metadata.plan.replace('annual', 'yearly');
+
+  // extend
+  metadata.planId = services.getPlanId(metadata.plan);
+
   // validate
   if (!metadata.email) {
     throw createError(400, 'Email missing');
   }
+  if (!validator.isEmail(metadata.email)) {
+    throw createError(400, 'Email address invalid');
+  }
   if (!metadata.name) {
     throw createError(400, 'Name missing');
   }
+  if (!/^[a-z0-9 ]+$/i.test(metadata.name)) {
+    throw createError(400, 'Name can contain only letters, numbers, and spaces');
+  }
   if (!metadata.stripeToken) {
     throw createError(400, 'Stripe token missing');
+  }
+  if (!metadata.planId) {
+    throw createError(400, `plan ${metadata.plan} is not configured`);
   }
 
   req.metadata = metadata;
