@@ -147,7 +147,7 @@ async function findOrCreateStripeCustomer(metadata) {
     const stripeCustomerMetadata = {
       email: metadata.email,
       name: metadata.name,
-      // source: metadata.stripeToken,
+      source: metadata.stripeToken,
     };
 
     try {
