@@ -68,7 +68,7 @@ exports.subscribeToStripePlan = async (metadata) => {
     await checkIfAlreadySubscribed(stripeCustomer, metadata.plan);
     await attachStripePaymentSource(stripeCustomer, metadata.stripeToken);
 
-    const coupon = metadata.couponCode ? await this.couponDetails(metadata.couponCode) : undefined;
+    const coupon = metadata.couponCode ? await findCoupon(metadata.couponCode) : undefined;
     const stripeSubscription = await createStripeSubscription(stripeCustomer, coupon, metadata);
 
     return { stripeCustomer, stripeSubscription };
@@ -147,7 +147,7 @@ async function findOrCreateStripeCustomer(metadata) {
     const stripeCustomerMetadata = {
       email: metadata.email,
       name: metadata.name,
-      source: metadata.stripeToken,
+      // source: metadata.stripeToken,
     };
 
     try {
