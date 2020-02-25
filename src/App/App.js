@@ -2,14 +2,12 @@
 
 import './App.css';
 import 'paymentfont/css/paymentfont.css';
+import routes from './Routes';
 
 import { createMuiTheme, ThemeProvider } from '@material-ui/core';
 import { teal } from '@material-ui/core/colors';
 import React from 'react';
 import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
-
-import NoMatchPage from '../../pages/NoMatchPage';
-import SignupPage from '../../pages/SignupPage';
 
 const theme = createMuiTheme({
   palette: {
@@ -40,12 +38,14 @@ function App() {
       <ThemeProvider theme={theme}>
         <Router>
           <Switch>
-            <Route
-              path="/:plan(monthly|annual|annual-$147|annual-147|yearly|yearly-$147|yearly-147)"
-              component={SignupPage}
-            />
-            <Route path="/" exact component={SignupPage} />
-            <Route component={NoMatchPage} />
+            {routes.map((route, i) => (
+              <Route
+                key={i}
+                path={route.path}
+                exact={route.exact}
+                render={(props) => <route.component {...props} routes={route.routes} />}
+              />
+            ))}
           </Switch>
         </Router>
       </ThemeProvider>
