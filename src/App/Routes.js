@@ -1,4 +1,3 @@
-import React from 'react';
 import NoMatchPage from '../pages/NoMatchPage';
 import SignupPage from '../pages/SignupPage';
 
@@ -7,11 +6,6 @@ const planParam = ':plan(monthly|annual|annual-$147|annual-147|yearly|yearly-$14
 const routes = [
   {
     path: '/',
-    exact: true,
-    component: SignupPage,
-  },
-  {
-    path: '/:view(pre-purchased)',
     exact: true,
     component: SignupPage,
   },
