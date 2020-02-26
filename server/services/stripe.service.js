@@ -1,8 +1,6 @@
 const createError = require('http-errors');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
-const vhx = require('vhx')(process.env.VHX_API_KEY);
-const util = require('util');
-const logger = require('./logger');
+const logger = require('./logger.service');
 
 // #region Static Variables
 
@@ -11,28 +9,6 @@ const pendingSignupRequestsByEmail = {};
 // #endregion
 
 // #region Public Methods
-
-exports.config = () => {
-  const {
-    DEBUG,
-    INTERCOM_APP_ID,
-    REACT_APP_BACKEND_URL,
-    SIGNUP_SUCCESS_PAGE,
-    SIGNUP_THANK_YOU_SITE_URL,
-    STRIPE_PUBLISHABLE_KEY,
-    VHX_PORTAL_URL,
-  } = process.env;
-
-  return {
-    DEBUG,
-    INTERCOM_APP_ID,
-    REACT_APP_BACKEND_URL,
-    SIGNUP_SUCCESS_PAGE,
-    SIGNUP_THANK_YOU_SITE_URL,
-    STRIPE_PUBLISHABLE_KEY,
-    VHX_PORTAL_URL,
-  };
-};
 
 exports.getStripePlan = async (plan) => {
   const planId = this.getPlanId(plan);
@@ -102,29 +78,6 @@ exports.updateStripeCustomer = async (customerId, properties) => {
   return customer;
 };
 
-exports.signupAtVhx = async (metadata, vhxCustomerHref) => {
-  // Reject repeated signup call if there are any pending requests for this user matched by email
-  checkRepeatedSignupCallFor(metadata.email);
-
-  // Block signup for requested user (by email) to avoid dupliated charges
-  pendingSignupRequestsByEmail[metadata.email] = metadata;
-
-  try {
-    let newCustomer;
-    let vhxCustomer = vhxCustomerHref ? await findVhxCustomer(vhxCustomerHref) : null;
-    if (vhxCustomer) {
-      await subscribeVhxCustomer(metadata, vhxCustomer);
-      newCustomer = false;
-    } else {
-      vhxCustomer = await createVhxCustomer(metadata);
-      newCustomer = true;
-    }
-    return { vhxCustomer, newCustomer };
-  } finally {
-    pendingSignupRequestsByEmail[metadata.email] = null;
-  }
-};
-
 exports.getPlanId = (name) => {
   switch ((name || '').toLowerCase()) {
     case 'annual':
@@ -178,7 +131,7 @@ async function findStripeCustomer(email) {
 
     return stripeCustomer;
   } catch (err) {
-    logger.error('services.findCustomer', 'Failed to find Stripe customer', email);
+    logger.error('stripeService.findCustomer', 'Failed to find Stripe customer', email);
   }
 }
 
@@ -196,9 +149,13 @@ async function findOrCreateStripeCustomer(metadata) {
 
     try {
       stripeCustomer = await stripe.customers.create(stripeCustomerMetadata);
-      logger.debug('services.findOrCreateStripeCustomer', 'Stripe customer created', stripeCustomer);
+      logger.debug('stripeService.findOrCreateStripeCustomer', 'Stripe customer created', stripeCustomer);
     } catch (err) {
-      logger.error('services.findOrCreateStripeCustomer', 'Failed to create Stripe customer', stripeCustomerMetadata);
+      logger.error(
+        'stripeService.findOrCreateStripeCustomer',
+        'Failed to create Stripe customer',
+        stripeCustomerMetadata,
+      );
       throw err;
     }
   }
@@ -279,7 +236,7 @@ async function createStripeSubscription(stripeCustomer, coupon, metadata) {
 
   try {
     const stripeSubscription = await stripe.subscriptions.create(stripeSubscriptionMetadata);
-    logger.debug('services.createStripeSubscription', 'Stripe subscription created', stripeSubscription);
+    logger.debug('stripeService.createStripeSubscription', 'Stripe subscription created', stripeSubscription);
     return stripeSubscription;
   } catch (err) {
     logger.error(
@@ -293,58 +250,6 @@ async function createStripeSubscription(stripeCustomer, coupon, metadata) {
 
 function customerDisplayName(stripeCustomer) {
   return `${stripeCustomer.name} (${stripeCustomer.email})`;
-}
-
-async function findVhxCustomer(href) {
-  try {
-    const vhxCustomer = await util.promisify(vhx.customers.retrieve)(href);
-    logger.debug('services.findVhxCustomer', 'VHX customer found', vhxCustomer);
-    return vhxCustomer;
-  } catch (err) {
-    logger.error('services.findVhxCustomer', 'Failed to find a customer at VHX side', href, err);
-    throw err;
-  }
-}
-
-async function subscribeVhxCustomer(metadata, vhxCustomer) {
-  let vhxAddProductMetadata;
-  try {
-    vhxAddProductMetadata = {
-      customer: vhxCustomer._links.self.href,
-      product: metadata.product,
-      plan: metadata.plan,
-    };
-    const vhxProduct = await util.promisify(vhx.customers.addProduct)(vhxAddProductMetadata);
-    logger.debug(
-      'services.subscribeVhxCustomer',
-      `Product added to VHX customer ${metadata.email}`,
-      vhxAddProductMetadata,
-    );
-    return vhxCustomer;
-  } catch (err) {
-    logger.error('services.subscribeVhxCustomer', 'Failed to add a product to VHX customer', vhxAddProductMetadata);
-    throw err;
-  }
-}
-
-async function createVhxCustomer(metadata) {
-  const vhxCustomerMetadata = {
-    email: metadata.email,
-    name: metadata.name,
-    product: metadata.product,
-    plan: metadata.plan,
-    password: metadata.password,
-    marketing_opt_in: metadata.marketingOptIn,
-  };
-
-  try {
-    const vhxCustomer = await util.promisify(vhx.customers.create)(vhxCustomerMetadata);
-    logger.debug('services.createVhxCustomer', 'VHX customer created', vhxCustomer);
-    return vhxCustomer;
-  } catch (err) {
-    logger.error('services.createVhxCustomer', 'Failed to create VHX customer', vhxCustomerMetadata);
-    throw err;
-  }
 }
 
 // #endregion

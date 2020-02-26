@@ -1,0 +1,21 @@
+exports.config = () => {
+  const {
+    DEBUG,
+    INTERCOM_APP_ID,
+    REACT_APP_BACKEND_URL,
+    SIGNUP_SUCCESS_PAGE,
+    SIGNUP_THANK_YOU_SITE_URL,
+    STRIPE_PUBLISHABLE_KEY,
+    VHX_PORTAL_URL,
+  } = process.env;
+
+  return {
+    DEBUG,
+    INTERCOM_APP_ID,
+    REACT_APP_BACKEND_URL,
+    SIGNUP_SUCCESS_PAGE,
+    SIGNUP_THANK_YOU_SITE_URL,
+    STRIPE_PUBLISHABLE_KEY,
+    VHX_PORTAL_URL,
+  };
+};

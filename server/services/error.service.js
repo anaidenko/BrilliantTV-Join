@@ -1,6 +1,6 @@
 const createError = require('http-errors');
-const config = require('./config');
-const logger = require('./logger');
+const config = require('../config');
+const logger = require('./logger.service');
 
 const { DEBUG, DEVELOPMENT } = config;
 const INTERNAL_SERVER_ERROR = 'Internal Server Error';

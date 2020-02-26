@@ -22,7 +22,7 @@ exports.parseSignupMetadata = (req, res, next) => {
   metadata.plan = metadata.plan.replace('annual', 'yearly');
 
   // extend
-  metadata.planId = services.getPlanId(metadata.plan);
+  metadata.planId = services.stripe.getPlanId(metadata.plan);
 
   // validate
   if (!metadata.email) {

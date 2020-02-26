@@ -4,7 +4,7 @@ const cors = require('cors');
 const morgan = require('morgan');
 const path = require('path');
 const sslRedirect = require('heroku-ssl-redirect');
-const error = require('./error');
+const error = require('./services/error.service');
 const config = require('./config');
 
 const { FORCE_HTTPS, DEVELOPMENT } = config;
