@@ -204,7 +204,7 @@ class CheckoutForm extends Component<Props, State> {
               onComplete();
             }
           } else {
-            await this.handleError(response);
+            await this.handleError(response, 'Signup Error');
           }
         },
       );
@@ -307,7 +307,7 @@ class CheckoutForm extends Component<Props, State> {
       errorMessage = 'Server Error. Please try again later.';
       error = errorMessage;
     }
-    console.error(tag, errorMessage, innerError || '');
+    console.error(tag || '', errorMessage, innerError || '');
     this.setState({ performingAction: false, serverError: error });
   }
 
