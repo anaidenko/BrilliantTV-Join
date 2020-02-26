@@ -295,7 +295,9 @@ class CheckoutForm extends Component<Props, State> {
   };
 
   async handleError(response, tag) {
-    let errorMessage, error, innerError;
+    let errorMessage;
+    let error;
+    let innerError;
     try {
       const content = await response.json();
       errorMessage = (content && content.message) || response.statusText;
@@ -491,20 +493,18 @@ class CheckoutForm extends Component<Props, State> {
           </Box>
         )}
 
-        {!prePurchased && (
-          <Button
-            className={c.register}
-            color="secondary"
-            disabled={!fullName || !emailAddress || !password || !passwordConfirmation || performingAction}
-            fullWidth
-            onClick={this.handleRegisterClick}
-            size="large"
-            variant="contained"
-            aria-label="click to submit payment"
-          >
-            Submit Payment
-          </Button>
-        )}
+        <Button
+          className={c.register}
+          color="secondary"
+          disabled={!fullName || !emailAddress || !password || !passwordConfirmation || performingAction}
+          fullWidth
+          onClick={this.handleRegisterClick}
+          size="large"
+          variant="contained"
+          aria-label={!prePurchased ? 'click to submit payment' : 'click to register'}
+        >
+          {!prePurchased ? 'Submit Payment' : 'Register'}
+        </Button>
 
         <Grid item className={c.grid}>
           <FormControlLabel
@@ -524,21 +524,6 @@ class CheckoutForm extends Component<Props, State> {
             }
           />
         </Grid>
-
-        {prePurchased && (
-          <Button
-            className={c.register}
-            color="secondary"
-            disabled={!fullName || !emailAddress || !password || !passwordConfirmation || performingAction}
-            fullWidth
-            onClick={this.handleRegisterClick}
-            size="large"
-            variant="contained"
-            aria-label="click to register"
-          >
-            Register
-          </Button>
-        )}
 
         {!prePurchased && (
           <>
