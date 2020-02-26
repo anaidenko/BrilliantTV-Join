@@ -5,6 +5,7 @@ import { withStyles } from '@material-ui/core/styles';
 import React, { Component } from 'react';
 import Intercom from 'react-intercom';
 import { Elements, StripeProvider } from 'react-stripe-elements';
+import classNames from 'classnames';
 
 import CheckoutDetails from '../../components/CheckoutDetails';
 import CheckoutForm from '../../components/CheckoutForm';
@@ -20,6 +21,9 @@ const styles = (theme) => ({
       marginTop: theme.spacing(3),
       marginBottom: theme.spacing(8),
     },
+  },
+  rootCompact: {
+    width: 640,
   },
   logo: {
     width: 147,
@@ -80,6 +84,8 @@ type Props = {
 type State = {
   planSlug: String,
   planDetails: Object,
+  viewSlug: String,
+  prePurchased: boolean,
 };
 
 class SignupPage extends Component<Props, State> {
@@ -95,12 +101,14 @@ class SignupPage extends Component<Props, State> {
     } = this.props;
 
     const planSlug = (params.plan || 'yearly').trim().toLowerCase();
+    const viewSlug = (params.view || '').trim().toLowerCase();
+    const prePurchased = viewSlug === 'pre-purchased';
     const planDetails = environment.plan;
 
-    this.setState({ planSlug, planDetails });
+    this.setState({ planSlug, planDetails, viewSlug, prePurchased });
   }
 
-  handlePaymentComplete = () => {
+  handleRegisterComplete = () => {
     const { planSlug } = this.state;
     if (['annual-147', 'annual-$147', 'yearly-147', 'yearly-$147'].includes(planSlug)) {
       window.location = `${environment.SIGNUP_THANK_YOU_SITE_URL || 'https://subscribe.brillianttv.com'}/thank-you-97`;
@@ -113,10 +121,10 @@ class SignupPage extends Component<Props, State> {
 
   render() {
     const { classes: c } = this.props;
-    const { planSlug, planDetails } = this.state;
+    const { planSlug, planDetails, prePurchased } = this.state;
 
     return (
-      <Box className={c.root}>
+      <Box className={classNames(c.root, prePurchased ? c.rootCompact : null)}>
         {environment.INTERCOM_APP_ID && (
           <Intercom
             appID={environment.INTERCOM_APP_ID}
@@ -181,37 +189,48 @@ class SignupPage extends Component<Props, State> {
             <Grid item sm container direction="column" className={c.dividerRight}>
               <StripeProvider apiKey={environment.STRIPE_PUBLISHABLE_KEY}>
                 <Elements>
-                  <CheckoutForm planSlug={planSlug} plan={planDetails} onComplete={this.handlePaymentComplete} />
+                  <CheckoutForm
+                    planSlug={planSlug}
+                    plan={planDetails}
+                    prePurchased={prePurchased}
+                    onComplete={this.handleRegisterComplete}
+                  />
                 </Elements>
               </StripeProvider>
             </Grid>
-            <Divider orientation="vertical" className={c.divider} />
-            <Grid item sm container direction="column">
-              <Hidden smUp>
-                <Box mt={2} />
-              </Hidden>
-              <CheckoutDetails plan={planDetails} />
-            </Grid>
+            {!prePurchased && (
+              <>
+                <Divider orientation="vertical" className={c.divider} />
+                <Grid item sm container direction="column">
+                  <Hidden smUp>
+                    <Box mt={2} />
+                  </Hidden>
+                  <CheckoutDetails plan={planDetails} />
+                </Grid>
+              </>
+            )}
           </Grid>
         </Paper>
 
-        <Paper elevation={3} className={[c.paper, c.testimonials].join(' ')}>
-          <Typography variant="h5" align="center" className={c.cardHeader}>
-            Testimonials
-          </Typography>
+        {!prePurchased && (
+          <Paper elevation={3} className={[c.paper, c.testimonials].join(' ')}>
+            <Typography variant="h5" align="center" className={c.cardHeader}>
+              Testimonials
+            </Typography>
 
-          <Typography align="center" className={c.subHeader1}>
-            The Transformation You’re Desiring Is Closer Than You Think.
-          </Typography>
+            <Typography align="center" className={c.subHeader1}>
+              The Transformation You’re Desiring Is Closer Than You Think.
+            </Typography>
 
-          <Typography align="center" className={c.subHeader2}>
-            Brilliant TV Has Helped Thousands Experience Transformational Growth!
-          </Typography>
+            <Typography align="center" className={c.subHeader2}>
+              Brilliant TV Has Helped Thousands Experience Transformational Growth!
+            </Typography>
 
-          <Box mt={4}>
-            <Testimonials />
-          </Box>
-        </Paper>
+            <Box mt={4}>
+              <Testimonials />
+            </Box>
+          </Paper>
+        )}
 
         {environment.INTERCOM_APP_ID && (
           <Hidden smDown>

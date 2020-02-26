@@ -6,7 +6,7 @@ import CloseIcon from '@material-ui/icons/Close';
 import ErrorIcon from '@material-ui/icons/Error';
 import InfoIcon from '@material-ui/icons/Info';
 import WarningIcon from '@material-ui/icons/Warning';
-import clsx from 'clsx';
+import classNames from 'classnames';
 import PropTypes from 'prop-types';
 import React from 'react';
 
@@ -52,11 +52,11 @@ function FeedbackSnackbarContent(props) {
 
   return (
     <SnackbarContent
-      className={clsx(c.root, c[variant], className)}
+      className={classNames(c.root, c[variant], className)}
       aria-describedby="client-snackbar"
       message={
         <span id="client-snackbar" className={c.message}>
-          <Icon className={clsx(c.icon, c.iconVariant)} />
+          <Icon className={classNames(c.icon, c.iconVariant)} />
           {message}
         </span>
       }

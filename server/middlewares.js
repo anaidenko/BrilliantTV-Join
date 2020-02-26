@@ -15,6 +15,7 @@ exports.parseSignupMetadata = (req, res, next) => {
     couponCode: body.couponCode || undefined,
     marketingOptIn: !!body.marketingOptIn,
     plan: body.plan || 'yearly',
+    prePurchased: !!body.prePurchased,
   };
 
   // normalize
@@ -36,7 +37,7 @@ exports.parseSignupMetadata = (req, res, next) => {
   if (!/^[a-z0-9 ]+$/i.test(metadata.name)) {
     throw createError(400, 'Name can contain only letters, numbers, and spaces');
   }
-  if (!metadata.stripeToken) {
+  if (!metadata.prePurchased && !metadata.stripeToken) {
     throw createError(400, 'Stripe token missing');
   }
   if (!metadata.planId) {

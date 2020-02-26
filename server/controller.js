@@ -54,24 +54,44 @@ exports.signup = async function(req, res) {
 
     logger.log('controller:signup', 'Signup requested', { ...req.metadata, password: '[HIDDEN]' }); // cloak password
 
-    try {
-      stripeResponse = await services.subscribeToStripePlan(req.metadata);
-    } catch (err) {
-      error.log('controller:signup', err);
-      error.send(req, res, err, {
-        details: 'Failed to register new user, credit card was not charged. Please contact customer support.',
-      });
-      return;
+    if (!req.metadata.prePurchased) {
+      try {
+        stripeResponse = await services.subscribeToStripePlan(req.metadata);
+      } catch (err) {
+        error.log('controller:signup', err);
+        error.send(req, res, err, {
+          details: 'Failed to register new user, credit card was not charged. Please contact customer support.',
+        });
+        return;
+      }
+    } else {
+      try {
+        stripeResponse = await services.assertSubscribedToStripePlan(req.metadata);
+      } catch (err) {
+        error.log('controller:signup', err);
+        error.send(req, res, err, {
+          details:
+            "Subscription not found by this email address, please make sure it's valid or contact customer support.",
+        });
+        return;
+      }
     }
 
     try {
-      vhxResponse = await services.signupAtVhx(req.metadata);
+      vhxResponse = await services.signupAtVhx(req.metadata, stripeResponse.stripeCustomer.metadata.vhxCustomerHref);
     } catch (err) {
       error.log('controller:signup', err);
       error.send(req, res, err, {
         details: 'Failed to register new user, please contact customer support.',
       });
       return;
+    }
+
+    if (vhxResponse.newCustomer) {
+      const vhxCustomerHref = vhxResponse.vhxCustomer._links.self.href;
+      await services.updateStripeCustomer(stripeResponse.stripeCustomer.id, {
+        metadata: { vhxCustomerHref },
+      });
     }
 
     const response = { ...stripeResponse, ...vhxResponse };

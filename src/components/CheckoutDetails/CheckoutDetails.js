@@ -113,14 +113,14 @@ class CheckoutDetails extends Component<Props, State> {
         <Typography variant="h6" className={c.totalValue}>
           Total Value of $6,545+
         </Typography>
-        <Box mt={2} mb={4}>
-          <Typography>Access everything for only</Typography>
-          {plan && (
+        {plan && (
+          <Box mt={2} mb={4}>
+            <Typography>Access everything for only</Typography>
             <Typography variant="h6" className={c.todayPrice}>
               Today only <PriceTag amount={plan.amount / 100} interval={plan.interval} />
             </Typography>
-          )}
-        </Box>
+          </Box>
+        )}
         <img src="/images/Satisfaction_Guaranteed.png" width="218" height="184" alt="satisfaction guaranteed" />
         <Typography variant="h6" className={c.moneyBackGuarantee} color="primary">
           30 Day Money-Back

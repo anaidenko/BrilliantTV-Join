@@ -56,6 +56,26 @@ exports.getStripeCoupon = async (code) => {
   return details;
 };
 
+exports.assertSubscribedToStripePlan = async (metadata) => {
+  const stripeCustomer = await findStripeCustomer(metadata.email);
+  if (!stripeCustomer) {
+    throw createError(
+      400,
+      "Subscription not found by this email address, please make sure it's valid or contact customer support.",
+    );
+  }
+
+  const stripeSubscription = await findSubscription(stripeCustomer, metadata.plan);
+  if (!stripeSubscription) {
+    throw createError(
+      400,
+      "Subscription not found by this email address, please make sure it's valid or contact customer support.",
+    );
+  }
+
+  return { stripeCustomer, stripeSubscription };
+};
+
 exports.subscribeToStripePlan = async (metadata) => {
   // Reject repeated signup call if there are any pending requests for this user matched by email
   checkRepeatedSignupCallFor(metadata.email);
@@ -77,7 +97,12 @@ exports.subscribeToStripePlan = async (metadata) => {
   }
 };
 
-exports.signupAtVhx = async (metadata) => {
+exports.updateStripeCustomer = async (customerId, properties) => {
+  const customer = await stripe.customers.update(customerId, properties);
+  return customer;
+};
+
+exports.signupAtVhx = async (metadata, vhxCustomerHref) => {
   // Reject repeated signup call if there are any pending requests for this user matched by email
   checkRepeatedSignupCallFor(metadata.email);
 
@@ -85,8 +110,16 @@ exports.signupAtVhx = async (metadata) => {
   pendingSignupRequestsByEmail[metadata.email] = metadata;
 
   try {
-    const vhxCustomer = await createVhxCustomer(metadata);
-    return { vhxCustomer };
+    let newCustomer;
+    let vhxCustomer = vhxCustomerHref ? await findVhxCustomer(vhxCustomerHref) : null;
+    if (vhxCustomer) {
+      await subscribeVhxCustomer(metadata, vhxCustomer);
+      newCustomer = false;
+    } else {
+      vhxCustomer = await createVhxCustomer(metadata);
+      newCustomer = true;
+    }
+    return { vhxCustomer, newCustomer };
   } finally {
     pendingSignupRequestsByEmail[metadata.email] = null;
   }
@@ -135,12 +168,23 @@ function checkRepeatedSignupCallFor(email) {
   }
 }
 
+async function findStripeCustomer(email) {
+  try {
+    // find a customer on Stripe by email address
+    let stripeCustomer = (await stripe.customers.list({
+      email,
+      limit: 1,
+    })).data[0];
+
+    return stripeCustomer;
+  } catch (err) {
+    logger.error('services.findCustomer', 'Failed to find Stripe customer', email);
+  }
+}
+
 async function findOrCreateStripeCustomer(metadata) {
   // find a customer on Stripe by email address
-  let stripeCustomer = (await stripe.customers.list({
-    email: metadata.email,
-    limit: 1,
-  })).data[0];
+  let stripeCustomer = await findStripeCustomer(metadata.email);
 
   if (!stripeCustomer) {
     // if not found, create a new stripe customer
@@ -152,9 +196,9 @@ async function findOrCreateStripeCustomer(metadata) {
 
     try {
       stripeCustomer = await stripe.customers.create(stripeCustomerMetadata);
-      logger.debug('findOrCreateStripeCustomer', 'Stripe customer created', stripeCustomer);
+      logger.debug('services.findOrCreateStripeCustomer', 'Stripe customer created', stripeCustomer);
     } catch (err) {
-      logger.error('findOrCreateStripeCustomer', 'Failed to create Stripe customer', stripeCustomerMetadata);
+      logger.error('services.findOrCreateStripeCustomer', 'Failed to create Stripe customer', stripeCustomerMetadata);
       throw err;
     }
   }
@@ -162,7 +206,7 @@ async function findOrCreateStripeCustomer(metadata) {
   return stripeCustomer;
 }
 
-async function checkIfAlreadySubscribed(stripeCustomer, plan) {
+async function findSubscription(stripeCustomer, plan) {
   if (!stripeCustomer) {
     return;
   }
@@ -175,10 +219,14 @@ async function checkIfAlreadySubscribed(stripeCustomer, plan) {
     plan: planId,
   })).data.filter((item) => item.status !== 'cancelled');
 
-  if (subscriptions.length > 0) {
-    const existingSubscription = subscriptions[0];
+  return subscriptions[0];
+}
+
+async function checkIfAlreadySubscribed(stripeCustomer, plan) {
+  const existingSubscription = await findSubscription(stripeCustomer, plan);
+  if (existingSubscription) {
     logger.warn(
-      'checkIfAlreadySubscribed',
+      'services.checkIfAlreadySubscribed',
       `Signup cancelled due to existing subscription to ${plan} plan for the customer ${customerDisplayName(
         stripeCustomer,
       )}.`,
@@ -198,13 +246,13 @@ async function attachStripePaymentSource(stripeCustomer, paymentSource) {
     // see https://github.com/stripe/stripe-node/wiki/Error-Handling
     if (err.type === 'StripeCardError') {
       logger.log(
-        'attachStripePaymentSource',
+        'services.attachStripePaymentSource',
         `Failed to attach payment source ${paymentSource} to Stripe customer ${customerDisplayName(stripeCustomer)}`,
       );
       throw createError(400, err);
     } else {
       logger.error(
-        'attachStripePaymentSource',
+        'services.attachStripePaymentSource',
         `Failed to attach payment source ${paymentSource} to Stripe customer ${customerDisplayName(stripeCustomer)}`,
       );
       throw err;
@@ -231,16 +279,52 @@ async function createStripeSubscription(stripeCustomer, coupon, metadata) {
 
   try {
     const stripeSubscription = await stripe.subscriptions.create(stripeSubscriptionMetadata);
-    logger.debug('createStripeSubscription', 'Stripe subscription created', stripeSubscription);
+    logger.debug('services.createStripeSubscription', 'Stripe subscription created', stripeSubscription);
     return stripeSubscription;
   } catch (err) {
-    logger.error('createStripeSubscription', 'Failed to create Stripe subscription', stripeSubscriptionMetadata);
+    logger.error(
+      'services.createStripeSubscription',
+      'Failed to create Stripe subscription',
+      stripeSubscriptionMetadata,
+    );
     throw err;
   }
 }
 
 function customerDisplayName(stripeCustomer) {
   return `${stripeCustomer.name} (${stripeCustomer.email})`;
+}
+
+async function findVhxCustomer(href) {
+  try {
+    const vhxCustomer = await util.promisify(vhx.customers.retrieve)(href);
+    logger.debug('services.findVhxCustomer', 'VHX customer found', vhxCustomer);
+    return vhxCustomer;
+  } catch (err) {
+    logger.error('services.findVhxCustomer', 'Failed to find a customer at VHX side', href, err);
+    throw err;
+  }
+}
+
+async function subscribeVhxCustomer(metadata, vhxCustomer) {
+  let vhxAddProductMetadata;
+  try {
+    vhxAddProductMetadata = {
+      customer: vhxCustomer._links.self.href,
+      product: metadata.product,
+      plan: metadata.plan,
+    };
+    const vhxProduct = await util.promisify(vhx.customers.addProduct)(vhxAddProductMetadata);
+    logger.debug(
+      'services.subscribeVhxCustomer',
+      `Product added to VHX customer ${metadata.email}`,
+      vhxAddProductMetadata,
+    );
+    return vhxCustomer;
+  } catch (err) {
+    logger.error('services.subscribeVhxCustomer', 'Failed to add a product to VHX customer', vhxAddProductMetadata);
+    throw err;
+  }
 }
 
 async function createVhxCustomer(metadata) {
@@ -255,10 +339,10 @@ async function createVhxCustomer(metadata) {
 
   try {
     const vhxCustomer = await util.promisify(vhx.customers.create)(vhxCustomerMetadata);
-    logger.debug('createVhxCustomer', 'VHX customer created', vhxCustomer);
+    logger.debug('services.createVhxCustomer', 'VHX customer created', vhxCustomer);
     return vhxCustomer;
   } catch (err) {
-    logger.error('createVhxCustomer', 'Failed to create VHX customer', vhxCustomerMetadata);
+    logger.error('services.createVhxCustomer', 'Failed to create VHX customer', vhxCustomerMetadata);
     throw err;
   }
 }

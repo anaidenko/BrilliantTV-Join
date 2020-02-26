@@ -147,7 +147,7 @@ class CheckoutForm extends Component<Props, State> {
     );
   };
 
-  handlePurchaseClick = () => {
+  handleRegisterClick = () => {
     const errors = this.validateForm();
 
     if (errors) {
@@ -164,23 +164,24 @@ class CheckoutForm extends Component<Props, State> {
           showErrors: true,
         },
         async () => {
-          const { planSlug, stripe, onComplete } = this.props;
+          const { plan, prePurchased, planSlug, stripe, onComplete } = this.props;
           const { fullName, emailAddress, password, couponCode, marketingOptIn } = this.state;
-          const { token } = await stripe.createToken({ name: fullName });
+          const { token } = prePurchased ? {} : await stripe.createToken({ name: fullName });
 
-          if (!token) {
+          if (!prePurchased && !token) {
             this.setState({ performingAction: false });
             return;
           }
 
           const metadata = {
-            stripeToken: token.id,
+            stripeToken: !prePurchased ? token.id : null,
             name: fullName,
             email: emailAddress,
             password,
-            couponCode,
+            couponCode: !prePurchased ? couponCode : null,
             marketingOptIn,
             plan: planSlug,
+            prePurchased,
           };
           const response = await fetch(`${environment.REACT_APP_BACKEND_URL}/signup`, {
             method: 'POST',
@@ -296,7 +297,7 @@ class CheckoutForm extends Component<Props, State> {
   };
 
   render() {
-    const { classes: c, plan } = this.props;
+    const { classes: c, plan, prePurchased } = this.props;
 
     const {
       performingAction,
@@ -389,48 +390,52 @@ class CheckoutForm extends Component<Props, State> {
           </Grid>
         </Grid>
 
-        <Typography variant="h6" color="primary" className={c.formHeader}>
-          Payment Information
-        </Typography>
+        {!prePurchased && (
+          <>
+            <Typography variant="h6" color="primary" className={c.formHeader}>
+              Payment Information
+            </Typography>
 
-        <Grid item container direction="column" className={c.grid}>
-          <StripeCardsSection showError={showErrors} />
-        </Grid>
+            <Grid item container direction="column" className={c.grid}>
+              <StripeCardsSection showError={showErrors} />
+            </Grid>
 
-        <Grid item container direction="row" className={classNames(c.grid, c.couponCodeContainer)}>
-          <Grid item xs>
-            <TextField
-              className={c.textField}
-              disabled={performingAction}
-              fullWidth
-              label="Coupon Code (optional)"
-              onChange={this.handleFieldChange('couponCode')}
-              onKeyDown={this.handleCouponFieldKeyDown}
-              readOnly={performingAction}
-              type="text"
-              value={couponCode}
-              variant="filled"
-            />
-          </Grid>
-          <Grid item className={c.applyCouponContainer}>
-            <Button
-              aria-label="click to apply coupon code"
-              className={c.applyCoupon}
-              color="secondary"
-              disabled={
-                !couponCode ||
-                (couponCode && couponDetails && couponCode.toUpperCase() === couponDetails.id.toUpperCase()) ||
-                performingAction
-              }
-              onClick={this.handleApplyCouponClick}
-              variant="contained"
-            >
-              Apply
-            </Button>
-          </Grid>
-        </Grid>
+            <Grid item container direction="row" className={classNames(c.grid, c.couponCodeContainer)}>
+              <Grid item xs>
+                <TextField
+                  className={c.textField}
+                  disabled={performingAction}
+                  fullWidth
+                  label="Coupon Code (optional)"
+                  onChange={this.handleFieldChange('couponCode')}
+                  onKeyDown={this.handleCouponFieldKeyDown}
+                  readOnly={performingAction}
+                  type="text"
+                  value={couponCode}
+                  variant="filled"
+                />
+              </Grid>
+              <Grid item className={c.applyCouponContainer}>
+                <Button
+                  aria-label="click to apply coupon code"
+                  className={c.applyCoupon}
+                  color="secondary"
+                  disabled={
+                    !couponCode ||
+                    (couponCode && couponDetails && couponCode.toUpperCase() === couponDetails.id.toUpperCase()) ||
+                    performingAction
+                  }
+                  onClick={this.handleApplyCouponClick}
+                  variant="contained"
+                >
+                  Apply
+                </Button>
+              </Grid>
+            </Grid>
 
-        <CouponApplied plan={plan} coupon={couponDetails} />
+            <CouponApplied plan={plan} coupon={couponDetails} />
+          </>
+        )}
 
         {serverError && (
           <Box my={2}>
@@ -443,18 +448,20 @@ class CheckoutForm extends Component<Props, State> {
           </Box>
         )}
 
-        <Button
-          className={c.register}
-          color="secondary"
-          disabled={!fullName || !emailAddress || !password || !passwordConfirmation || performingAction}
-          fullWidth
-          onClick={this.handlePurchaseClick}
-          size="large"
-          variant="contained"
-          aria-label="click to submit payment"
-        >
-          Submit Payment
-        </Button>
+        {!prePurchased && (
+          <Button
+            className={c.register}
+            color="secondary"
+            disabled={!fullName || !emailAddress || !password || !passwordConfirmation || performingAction}
+            fullWidth
+            onClick={this.handleRegisterClick}
+            size="large"
+            variant="contained"
+            aria-label="click to submit payment"
+          >
+            Submit Payment
+          </Button>
+        )}
 
         <Grid item className={c.grid}>
           <FormControlLabel
@@ -475,17 +482,40 @@ class CheckoutForm extends Component<Props, State> {
           />
         </Grid>
 
-        <Box spacing={2}>
-          <img src="/icons/payment/visa.png" className={c.paymentTypeIcon} alt="visa card" />
-          <img src="/icons/payment/mastercard.png" className={c.paymentTypeIcon} alt="master card" />
-          <img src="/icons/payment/american-express.png" className={c.paymentTypeIcon} alt="americal express card" />
-          <img src="/icons/payment/discover.png" className={c.paymentTypeIcon} alt="discover card" />
-        </Box>
+        {prePurchased && (
+          <Button
+            className={c.register}
+            color="secondary"
+            disabled={!fullName || !emailAddress || !password || !passwordConfirmation || performingAction}
+            fullWidth
+            onClick={this.handleRegisterClick}
+            size="large"
+            variant="contained"
+            aria-label="click to register"
+          >
+            Register
+          </Button>
+        )}
 
-        <Typography color="textSecondary" component="small">
-          <PadlockIcon className={c.padlock} height="12" />
-          100% Safe &amp; Secure Payment
-        </Typography>
+        {!prePurchased && (
+          <>
+            <Box spacing={2}>
+              <img src="/icons/payment/visa.png" className={c.paymentTypeIcon} alt="visa card" />
+              <img src="/icons/payment/mastercard.png" className={c.paymentTypeIcon} alt="master card" />
+              <img
+                src="/icons/payment/american-express.png"
+                className={c.paymentTypeIcon}
+                alt="americal express card"
+              />
+              <img src="/icons/payment/discover.png" className={c.paymentTypeIcon} alt="discover card" />
+            </Box>
+
+            <Typography color="textSecondary" component="small">
+              <PadlockIcon className={c.padlock} height="12" />
+              100% Safe &amp; Secure Payment
+            </Typography>
+          </>
+        )}
       </form>
     );
   }
