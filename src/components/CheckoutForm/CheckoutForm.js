@@ -354,9 +354,15 @@ class CheckoutForm extends Component<Props, State> {
 
     return (
       <form className={c.root} onSubmit={(e) => e.preventDefault()}>
-        <Typography align="left" variant="h6" color="primary" className={c.formHeader}>
-          BrilliantTV Account Information
-        </Typography>
+        {!prePurchased ? (
+          <Typography align="left" variant="h6" color="primary" className={c.formHeader}>
+            BrilliantTV Account Information
+          </Typography>
+        ) : (
+          <Typography align="left" variant="h6" color="primary" className={c.formHeader}>
+            Create your Brilliant TV Account
+          </Typography>
+        )}
 
         <Grid item container direction="column" className={c.grid}>
           <Grid item className={c.grid}>
