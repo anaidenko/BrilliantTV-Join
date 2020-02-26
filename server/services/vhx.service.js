@@ -11,7 +11,7 @@ const pendingSignupRequestsByEmail = {};
 
 // #region Public Methods
 
-exports.signupAtVhx = async (metadata, vhxCustomerHref) => {
+exports.signup = async (metadata, vhxCustomerHref) => {
   // Reject repeated signup call if there are any pending requests for this user matched by email
   checkRepeatedSignupCallFor(metadata.email);
 
@@ -19,16 +19,16 @@ exports.signupAtVhx = async (metadata, vhxCustomerHref) => {
   pendingSignupRequestsByEmail[metadata.email] = metadata;
 
   try {
-    let newCustomer;
-    let vhxCustomer = vhxCustomerHref ? await findVhxCustomer(vhxCustomerHref) : null;
-    if (vhxCustomer) {
-      await subscribeVhxCustomer(metadata, vhxCustomer);
-      newCustomer = false;
+    let isNewCustomer;
+    let customer = vhxCustomerHref ? await findCustomer(vhxCustomerHref) : null;
+    if (customer) {
+      await subscribeCustomer(metadata, customer);
+      isNewCustomer = false;
     } else {
-      vhxCustomer = await createVhxCustomer(metadata);
-      newCustomer = true;
+      customer = await createCustomer(metadata);
+      isNewCustomer = true;
     }
-    return { vhxCustomer, newCustomer };
+    return { vhxCustomer: customer, isNewCustomer };
   } finally {
     pendingSignupRequestsByEmail[metadata.email] = null;
   }
@@ -47,40 +47,36 @@ function checkRepeatedSignupCallFor(email) {
   }
 }
 
-async function findVhxCustomer(href) {
+async function findCustomer(href) {
   try {
-    const vhxCustomer = await util.promisify(vhx.customers.retrieve)(href);
-    logger.debug('vhxService.findVhxCustomer', 'VHX customer found', vhxCustomer);
-    return vhxCustomer;
+    const customer = await util.promisify(vhx.customers.retrieve)(href);
+    logger.debug('vhxService.findCustomer', 'VHX customer found', customer);
+    return customer;
   } catch (err) {
-    logger.error('vhxService.findVhxCustomer', 'Failed to find a customer at VHX side', href, err);
+    logger.error('vhxService.findCustomer', 'Failed to find a customer at VHX side', href, err);
     throw err;
   }
 }
 
-async function subscribeVhxCustomer(metadata, vhxCustomer) {
-  let vhxAddProductMetadata;
+async function subscribeCustomer(metadata, vhxCustomer) {
+  let addProductMetadata;
   try {
-    vhxAddProductMetadata = {
+    addProductMetadata = {
       customer: vhxCustomer._links.self.href,
       product: metadata.product,
       plan: metadata.plan,
     };
-    const vhxProduct = await util.promisify(vhx.customers.addProduct)(vhxAddProductMetadata);
-    logger.debug(
-      'services.subscribeVhxCustomer',
-      `Product added to VHX customer ${metadata.email}`,
-      vhxAddProductMetadata,
-    );
-    return vhxCustomer;
+    const product = await util.promisify(vhx.customers.addProduct)(addProductMetadata);
+    logger.debug('services.subscribeCustomer', `Product added to VHX customer ${metadata.email}`, addProductMetadata);
+    return product;
   } catch (err) {
-    logger.error('vhxService.subscribeVhxCustomer', 'Failed to add a product to VHX customer', vhxAddProductMetadata);
+    logger.error('vhxService.subscribeCustomer', 'Failed to add a product to VHX customer', addProductMetadata);
     throw err;
   }
 }
 
-async function createVhxCustomer(metadata) {
-  const vhxCustomerMetadata = {
+async function createCustomer(metadata) {
+  const customerMetadata = {
     email: metadata.email,
     name: metadata.name,
     product: metadata.product,
@@ -90,11 +86,11 @@ async function createVhxCustomer(metadata) {
   };
 
   try {
-    const vhxCustomer = await util.promisify(vhx.customers.create)(vhxCustomerMetadata);
-    logger.debug('vhxService.createVhxCustomer', 'VHX customer created', vhxCustomer);
-    return vhxCustomer;
+    const customer = await util.promisify(vhx.customers.create)(customerMetadata);
+    logger.debug('vhxService.createCustomer', 'VHX customer created', customer);
+    return customer;
   } catch (err) {
-    logger.error('vhxService.createVhxCustomer', 'Failed to create VHX customer', vhxCustomerMetadata);
+    logger.error('vhxService.createCustomer', 'Failed to create VHX customer', customerMetadata);
     throw err;
   }
 }

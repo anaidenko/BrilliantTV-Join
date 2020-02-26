@@ -7,7 +7,7 @@ exports.config = async function(req, res) {
   try {
     const config = services.core.config();
     if (req.params.plan) {
-      const plan = await services.stripe.getStripePlan(req.params.plan);
+      const plan = await services.stripe.getPlan(req.params.plan);
       res.json({ ...config, plan });
     } else {
       res.json(config);
@@ -20,7 +20,7 @@ exports.config = async function(req, res) {
 
 exports.planDetails = async function(req, res) {
   try {
-    const plan = await services.stripe.getStripePlan(req.params.name);
+    const plan = await services.stripe.getPlan(req.params.name);
     res.json(plan);
   } catch (err) {
     error.log('controller:planDetails', err);
@@ -30,7 +30,7 @@ exports.planDetails = async function(req, res) {
 
 exports.couponDetails = async function(req, res) {
   try {
-    const coupon = await services.stripe.getStripeCoupon(req.params.code);
+    const coupon = await services.stripe.getCoupon(req.params.code);
     res.json(coupon);
   } catch (err) {
     error.log('controller:couponDetails', err);
@@ -56,7 +56,7 @@ exports.signup = async function(req, res) {
 
     if (!req.metadata.prePurchased) {
       try {
-        stripeResponse = await services.stripe.subscribeToStripePlan(req.metadata);
+        stripeResponse = await services.stripe.subscribe(req.metadata);
       } catch (err) {
         error.log('controller:signup', err);
         error.send(req, res, err, {
@@ -66,7 +66,7 @@ exports.signup = async function(req, res) {
       }
     } else {
       try {
-        stripeResponse = await services.stripe.assertSubscribedToStripePlan(req.metadata);
+        stripeResponse = await services.stripe.assertSubscribed(req.metadata);
       } catch (err) {
         error.log('controller:signup', err);
         error.send(req, res, err, {
@@ -78,23 +78,25 @@ exports.signup = async function(req, res) {
     }
 
     try {
-      vhxResponse = await services.vhx.signupAtVhx(
-        req.metadata,
-        stripeResponse.stripeCustomer.metadata.vhxCustomerHref,
-      );
+      vhxResponse = await services.vhx.signup(req.metadata, stripeResponse.stripeCustomer.metadata.vhxCustomerHref);
     } catch (err) {
       error.log('controller:signup', err);
       error.send(req, res, err, {
-        details: 'Failed to register new user, please contact customer support.',
+        details: 'Failed to register user, please contact customer support.',
       });
       return;
     }
 
-    if (vhxResponse.newCustomer) {
-      const vhxCustomerHref = vhxResponse.vhxCustomer._links.self.href;
-      await services.stripe.updateStripeCustomer(stripeResponse.stripeCustomer.id, {
-        metadata: { vhxCustomerHref },
-      });
+    try {
+      if (vhxResponse.isNewCustomer) {
+        const vhxCustomerHref = vhxResponse.vhxCustomer._links.self.href;
+        await services.stripe.updateCustomer(stripeResponse.stripeCustomer.id, {
+          metadata: { vhxCustomerHref },
+        });
+      }
+    } catch (err) {
+      error.log('controller:signup', err);
+      // ignore and fall back down - not critical
     }
 
     const response = { ...stripeResponse, ...vhxResponse };

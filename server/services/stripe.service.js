@@ -10,7 +10,7 @@ const pendingSignupRequestsByEmail = {};
 
 // #region Public Methods
 
-exports.getStripePlan = async (plan) => {
+exports.getPlan = async (plan) => {
   const planId = this.getPlanId(plan);
   if (!planId) {
     throw createError(404, 'Plan not found');
@@ -19,7 +19,7 @@ exports.getStripePlan = async (plan) => {
   return details;
 };
 
-exports.getStripeCoupon = async (code) => {
+exports.getCoupon = async (code) => {
   let details;
   if (code) {
     details = details || (await findCoupon(code));
@@ -32,27 +32,27 @@ exports.getStripeCoupon = async (code) => {
   return details;
 };
 
-exports.assertSubscribedToStripePlan = async (metadata) => {
-  const stripeCustomer = await findStripeCustomer(metadata.email);
-  if (!stripeCustomer) {
+exports.assertSubscribed = async (metadata) => {
+  const customer = await findCustomer(metadata.email);
+  if (!customer) {
     throw createError(
       400,
       "Subscription not found by this email address, please make sure it's valid or contact customer support.",
     );
   }
 
-  const stripeSubscription = await findSubscription(stripeCustomer, metadata.plan);
-  if (!stripeSubscription) {
+  const subscription = await findSubscription(customer, metadata.plan);
+  if (!subscription) {
     throw createError(
       400,
       "Subscription not found by this email address, please make sure it's valid or contact customer support.",
     );
   }
 
-  return { stripeCustomer, stripeSubscription };
+  return { stripeCustomer: customer, stripeSubscription: subscription };
 };
 
-exports.subscribeToStripePlan = async (metadata) => {
+exports.subscribe = async (metadata) => {
   // Reject repeated signup call if there are any pending requests for this user matched by email
   checkRepeatedSignupCallFor(metadata.email);
 
@@ -60,20 +60,20 @@ exports.subscribeToStripePlan = async (metadata) => {
   pendingSignupRequestsByEmail[metadata.email] = metadata;
 
   try {
-    const stripeCustomer = await findOrCreateStripeCustomer(metadata);
-    await checkIfAlreadySubscribed(stripeCustomer, metadata.plan);
-    await attachStripePaymentSource(stripeCustomer, metadata.stripeToken);
+    const customer = await findOrCreateCustomer(metadata);
+    await checkIfAlreadySubscribed(customer, metadata.plan);
+    await attachPaymentSource(customer, metadata.stripeToken);
 
     const coupon = metadata.couponCode ? await findCoupon(metadata.couponCode) : undefined;
-    const stripeSubscription = await createStripeSubscription(stripeCustomer, coupon, metadata);
+    const subscription = await createSubscription(customer, coupon, metadata);
 
-    return { stripeCustomer, stripeSubscription };
+    return { stripeCustomer: customer, stripeSubscription: subscription };
   } finally {
     pendingSignupRequestsByEmail[metadata.email] = null;
   }
 };
 
-exports.updateStripeCustomer = async (customerId, properties) => {
+exports.updateCustomer = async (customerId, properties) => {
   const customer = await stripe.customers.update(customerId, properties);
   return customer;
 };
@@ -121,50 +121,46 @@ function checkRepeatedSignupCallFor(email) {
   }
 }
 
-async function findStripeCustomer(email) {
+async function findCustomer(email) {
   try {
     // find a customer on Stripe by email address
-    let stripeCustomer = (await stripe.customers.list({
+    let customer = (await stripe.customers.list({
       email,
       limit: 1,
     })).data[0];
 
-    return stripeCustomer;
+    return customer;
   } catch (err) {
     logger.error('stripeService.findCustomer', 'Failed to find Stripe customer', email);
   }
 }
 
-async function findOrCreateStripeCustomer(metadata) {
+async function findOrCreateCustomer(metadata) {
   // find a customer on Stripe by email address
-  let stripeCustomer = await findStripeCustomer(metadata.email);
+  let customer = await findCustomer(metadata.email);
 
-  if (!stripeCustomer) {
+  if (!customer) {
     // if not found, create a new stripe customer
-    const stripeCustomerMetadata = {
+    const customerMetadata = {
       email: metadata.email,
       name: metadata.name,
       // source: metadata.stripeToken,
     };
 
     try {
-      stripeCustomer = await stripe.customers.create(stripeCustomerMetadata);
-      logger.debug('stripeService.findOrCreateStripeCustomer', 'Stripe customer created', stripeCustomer);
+      customer = await stripe.customers.create(customerMetadata);
+      logger.debug('stripeService.findOrCreateCustomer', 'Stripe customer created', customer);
     } catch (err) {
-      logger.error(
-        'stripeService.findOrCreateStripeCustomer',
-        'Failed to create Stripe customer',
-        stripeCustomerMetadata,
-      );
+      logger.error('stripeService.findOrCreateCustomer', 'Failed to create Stripe customer', customerMetadata);
       throw err;
     }
   }
 
-  return stripeCustomer;
+  return customer;
 }
 
-async function findSubscription(stripeCustomer, plan) {
-  if (!stripeCustomer) {
+async function findSubscription(customer, plan) {
+  if (!customer) {
     return;
   }
 
@@ -172,20 +168,20 @@ async function findSubscription(stripeCustomer, plan) {
 
   // check if customer already subscribed to selected plan
   const subscriptions = (await stripe.subscriptions.list({
-    customer: stripeCustomer.id,
+    customer: customer.id,
     plan: planId,
   })).data.filter((item) => item.status !== 'cancelled');
 
   return subscriptions[0];
 }
 
-async function checkIfAlreadySubscribed(stripeCustomer, plan) {
-  const existingSubscription = await findSubscription(stripeCustomer, plan);
+async function checkIfAlreadySubscribed(customer, plan) {
+  const existingSubscription = await findSubscription(customer, plan);
   if (existingSubscription) {
     logger.warn(
-      'services.checkIfAlreadySubscribed',
+      'stripeService.checkIfAlreadySubscribed',
       `Signup cancelled due to existing subscription to ${plan} plan for the customer ${customerDisplayName(
-        stripeCustomer,
+        customer,
       )}.`,
       `ID=${existingSubscription.id}. Status=${existingSubscription.status}.`,
     );
@@ -196,30 +192,30 @@ async function checkIfAlreadySubscribed(stripeCustomer, plan) {
   }
 }
 
-async function attachStripePaymentSource(stripeCustomer, paymentSource) {
+async function attachPaymentSource(customer, paymentSource) {
   try {
-    await stripe.customers.update(stripeCustomer.id, { source: paymentSource });
+    await stripe.customers.update(customer.id, { source: paymentSource });
   } catch (err) {
     // see https://github.com/stripe/stripe-node/wiki/Error-Handling
     if (err.type === 'StripeCardError') {
       logger.log(
-        'services.attachStripePaymentSource',
-        `Failed to attach payment source ${paymentSource} to Stripe customer ${customerDisplayName(stripeCustomer)}`,
+        'stripeService.attachPaymentSource',
+        `Failed to attach payment source ${paymentSource} to Stripe customer ${customerDisplayName(customer)}`,
       );
       throw createError(400, err);
     } else {
       logger.error(
-        'services.attachStripePaymentSource',
-        `Failed to attach payment source ${paymentSource} to Stripe customer ${customerDisplayName(stripeCustomer)}`,
+        'stripeService.attachPaymentSource',
+        `Failed to attach payment source ${paymentSource} to Stripe customer ${customerDisplayName(customer)}`,
       );
       throw err;
     }
   }
 }
 
-async function createStripeSubscription(stripeCustomer, coupon, metadata) {
-  const stripeSubscriptionMetadata = {
-    customer: stripeCustomer.id,
+async function createSubscription(customer, coupon, metadata) {
+  const subscriptionMetadata = {
+    customer: customer.id,
     collection_method: 'charge_automatically',
     items: [
       {
@@ -235,21 +231,17 @@ async function createStripeSubscription(stripeCustomer, coupon, metadata) {
   };
 
   try {
-    const stripeSubscription = await stripe.subscriptions.create(stripeSubscriptionMetadata);
-    logger.debug('stripeService.createStripeSubscription', 'Stripe subscription created', stripeSubscription);
-    return stripeSubscription;
+    const subscription = await stripe.subscriptions.create(subscriptionMetadata);
+    logger.debug('stripeService.createSubscription', 'Stripe subscription created', subscription);
+    return subscription;
   } catch (err) {
-    logger.error(
-      'services.createStripeSubscription',
-      'Failed to create Stripe subscription',
-      stripeSubscriptionMetadata,
-    );
+    logger.error('stripeService.createSubscription', 'Failed to create Stripe subscription', subscriptionMetadata);
     throw err;
   }
 }
 
-function customerDisplayName(stripeCustomer) {
-  return `${stripeCustomer.name} (${stripeCustomer.email})`;
+function customerDisplayName(customer) {
+  return `${customer.name} (${customer.email})`;
 }
 
 // #endregion
