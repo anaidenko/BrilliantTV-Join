@@ -2,10 +2,10 @@
 
 import { Box, Button, Divider, Fab, Grid, Hidden, Paper, Typography } from '@material-ui/core';
 import { withStyles } from '@material-ui/core/styles';
+import classNames from 'classnames';
 import React, { Component } from 'react';
 import Intercom from 'react-intercom';
 import { Elements, StripeProvider } from 'react-stripe-elements';
-import classNames from 'classnames';
 
 import CheckoutDetails from '../../components/CheckoutDetails';
 import CheckoutForm from '../../components/CheckoutForm';
@@ -84,7 +84,6 @@ type Props = {
 type State = {
   planSlug: String,
   planDetails: Object,
-  viewSlug: String,
   prePurchased: boolean,
 };
 
@@ -105,7 +104,7 @@ class SignupPage extends Component<Props, State> {
     const prePurchased = viewSlug === 'pre-purchased';
     const planDetails = environment.plan;
 
-    this.setState({ planSlug, planDetails, viewSlug, prePurchased });
+    this.setState({ planSlug, planDetails, prePurchased });
   }
 
   handleRegisterComplete = () => {

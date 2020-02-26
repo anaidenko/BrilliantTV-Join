@@ -164,7 +164,7 @@ class CheckoutForm extends Component<Props, State> {
           showErrors: true,
         },
         async () => {
-          const { plan, prePurchased, planSlug, stripe, onComplete } = this.props;
+          const { prePurchased, planSlug, stripe, onComplete } = this.props;
           const { fullName, emailAddress, password, couponCode, marketingOptIn } = this.state;
           const { token } = prePurchased ? {} : await stripe.createToken({ name: fullName });
 

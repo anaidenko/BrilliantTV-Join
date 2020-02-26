@@ -2,12 +2,13 @@
 
 import './App.css';
 import 'paymentfont/css/paymentfont.css';
-import routes from './Routes';
 
 import { createMuiTheme, ThemeProvider } from '@material-ui/core';
 import { teal } from '@material-ui/core/colors';
 import React from 'react';
 import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
+
+import routes from './Routes';
 
 const theme = createMuiTheme({
   palette: {
