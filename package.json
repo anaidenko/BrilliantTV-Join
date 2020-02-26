@@ -93,7 +93,7 @@
     "eslint-plugin-unicorn": "12.1.0",
     "flow-bin": "^0.110.1",
     "flow-typed": "^2.4.0",
-    "husky": "^3.0.9",
+    "husky": "^4.2.3",
     "lint-staged": "^9.4.2",
     "nodemon": "^1.19.4",
     "prettier": "^1.18.2"
