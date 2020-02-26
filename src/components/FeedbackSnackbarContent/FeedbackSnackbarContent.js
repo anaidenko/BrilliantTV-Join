@@ -57,7 +57,7 @@ function FeedbackSnackbarContent(props) {
       message={
         <span id="client-snackbar" className={c.message}>
           <Icon className={classNames(c.icon, c.iconVariant)} />
-          {message}
+          <span>{message}</span>
         </span>
       }
       action={[

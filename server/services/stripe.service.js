@@ -1,6 +1,7 @@
 const createError = require('http-errors');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const logger = require('./logger.service');
+const config = require('../config');
 
 // #region Static Variables
 
@@ -37,7 +38,7 @@ exports.assertSubscribed = async (metadata) => {
   if (!customer) {
     throw createError(
       400,
-      "Subscription not found by this email address, please make sure it's valid or contact customer support.",
+      `Subscription not found by this email address, please make sure it's valid or contact customer support at ${config.CUSTOMER_SUPPORT_EMAIL}.`,
     );
   }
 
@@ -45,7 +46,7 @@ exports.assertSubscribed = async (metadata) => {
   if (!subscription) {
     throw createError(
       400,
-      "Subscription not found by this email address, please make sure it's valid or contact customer support.",
+      `Subscription not found by this email address, please make sure it's valid or contact customer support at ${config.CUSTOMER_SUPPORT_EMAIL}.`,
     );
   }
 
@@ -187,7 +188,7 @@ async function checkIfAlreadySubscribed(customer, plan) {
     );
     throw createError(
       400,
-      'You must have been already subscribed, payment declined. Please proceed to login page or contact customer support.',
+      `You must have been already subscribed, payment declined. Please proceed to login page or contact customer support at ${config.CUSTOMER_SUPPORT_EMAIL}.`,
     );
   }
 }

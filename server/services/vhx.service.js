@@ -67,7 +67,7 @@ async function subscribeCustomer(metadata, vhxCustomer) {
       plan: metadata.plan,
     };
     const product = await util.promisify(vhx.customers.addProduct)(addProductMetadata);
-    logger.debug('services.subscribeCustomer', `Product added to VHX customer ${metadata.email}`, addProductMetadata);
+    logger.debug('vhxService.subscribeCustomer', `Product added to VHX customer ${metadata.email}`, addProductMetadata);
     return product;
   } catch (err) {
     logger.error('vhxService.subscribeCustomer', 'Failed to add a product to VHX customer', addProductMetadata);

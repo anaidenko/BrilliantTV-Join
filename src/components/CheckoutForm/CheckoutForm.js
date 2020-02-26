@@ -1,11 +1,12 @@
 // @flow
 
-import { Box, Button, Checkbox, FormControlLabel, Grid, Typography } from '@material-ui/core';
+import { Box, Button, Checkbox, FormControlLabel, Grid, Link, Typography } from '@material-ui/core';
 import { withStyles } from '@material-ui/core/styles';
 import classNames from 'classnames';
 import React, { Component } from 'react';
 import { InjectedProps, injectStripe } from 'react-stripe-elements';
 import validate from 'validate.js';
+import validator from 'validator';
 
 import environment from '../../config/environment';
 import { PadlockIcon } from '../../icons';
@@ -77,6 +78,14 @@ const styles = (theme) => ({
   link: {
     fontWeight: 'bold',
   },
+  errorLink: {
+    fontWeight: 'bold',
+    color: 'inherit',
+    textDecoration: 'none',
+    '&:hover': {
+      textDecoration: 'underline',
+    },
+  },
   login: {
     marginTop: theme.spacing(3),
   },
@@ -138,10 +147,7 @@ class CheckoutForm extends Component<Props, State> {
           const content = await response.json();
           this.setState({ performingAction: false, couponDetails: content });
         } else {
-          const content = await response.json();
-          const error = (content && content.message) || response.statusText;
-          console.error('Coupon Error', error);
-          this.setState({ performingAction: false, serverError: error });
+          await this.handleError(response, 'Coupon Error');
         }
       },
     );
@@ -198,15 +204,7 @@ class CheckoutForm extends Component<Props, State> {
               onComplete();
             }
           } else {
-            let errorMessage;
-            try {
-              const content = await response.json();
-              errorMessage = (content && content.message) || response.statusText;
-            } catch (error) {
-              errorMessage = 'Server Error. Please try again later.';
-            }
-            console.error('Signup Error', errorMessage);
-            this.setState({ performingAction: false, serverError: errorMessage });
+            await this.handleError(response);
           }
         },
       );
@@ -294,6 +292,45 @@ class CheckoutForm extends Component<Props, State> {
 
   handleFeedbackClose = () => {
     this.setState({ serverError: '' });
+  };
+
+  async handleError(response, tag) {
+    let errorMessage, error, innerError;
+    try {
+      const content = await response.json();
+      errorMessage = (content && content.message) || response.statusText;
+      error = this.formatError(errorMessage);
+    } catch (err) {
+      innerError = err;
+      errorMessage = 'Server Error. Please try again later.';
+      error = errorMessage;
+    }
+    console.error(tag, errorMessage, innerError || '');
+    this.setState({ performingAction: false, serverError: error });
+  }
+
+  formatError = (error: string): string => {
+    const c = this.props.classes;
+    error = this.formatLinks(error, { class: c.errorLink, target: '_blank' });
+    return error;
+  };
+
+  formatLinks = (message: string, props): any => {
+    if (!message) {
+      return message;
+    }
+    const parts = String(message).split(/\b([^\s]+?@[^\s]+)\b/gi);
+    const result = parts.map((part) => {
+      if (validator.isEmail(part)) {
+        return (
+          <Link href={`mailto:${part}`} {...props}>
+            {part}
+          </Link>
+        );
+      }
+      return part;
+    });
+    return result;
   };
 
   render() {

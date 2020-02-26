@@ -2,6 +2,7 @@ const apicache = require('apicache');
 const services = require('./services');
 const error = require('./services/error.service');
 const logger = require('./services/logger.service');
+const config = require('./config');
 
 exports.config = async function(req, res) {
   try {
@@ -60,7 +61,7 @@ exports.signup = async function(req, res) {
       } catch (err) {
         error.log('controller:signup', err);
         error.send(req, res, err, {
-          details: 'Failed to register new user, credit card was not charged. Please contact customer support.',
+          details: `Failed to register new user, credit card was not charged. Please contact customer support at ${config.CUSTOMER_SUPPORT_EMAIL}.`,
         });
         return;
       }
@@ -70,8 +71,7 @@ exports.signup = async function(req, res) {
       } catch (err) {
         error.log('controller:signup', err);
         error.send(req, res, err, {
-          details:
-            "Subscription not found by this email address, please make sure it's valid or contact customer support.",
+          details: `Subscription not found by this email address, please make sure it's valid or contact customer support at ${config.CUSTOMER_SUPPORT_EMAIL}.`,
         });
         return;
       }
@@ -82,7 +82,7 @@ exports.signup = async function(req, res) {
     } catch (err) {
       error.log('controller:signup', err);
       error.send(req, res, err, {
-        details: 'Failed to register user, please contact customer support.',
+        details: `Failed to register user, please contact customer support at ${config.CUSTOMER_SUPPORT_EMAIL}.`,
       });
       return;
     }
