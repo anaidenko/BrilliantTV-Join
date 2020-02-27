@@ -110,7 +110,7 @@ class SignupPage extends Component<Props, State> {
   handleRegisterComplete = () => {
     const { planSlug } = this.state;
     if (['annual-147', 'annual-$147', 'yearly-147', 'yearly-$147'].includes(planSlug)) {
-      window.location = `${environment.SIGNUP_THANK_YOU_SITE_URL || 'https://subscribe.brillianttv.com'}/thank-you-97`;
+      window.location = `${environment.SIGNUP_THANK_YOU_SITE_URL || 'https://subscribe.brillianttv.com'}/thank-you-147`;
     } else if (planSlug === 'monthly') {
       window.location = `${environment.SIGNUP_THANK_YOU_SITE_URL || 'https://subscribe.brillianttv.com'}/thank-you-20`;
     } else {
