@@ -16,7 +16,8 @@
     "lint:fix": "eslint --fix src",
     "heroku-postbuild": "yarn install --production=false; yarn install; yarn build",
     "release-dev": "heroku git:remote -a brillianttv-join-dev && git push heroku master",
-    "release-prod": "heroku git:remote -a brillianttv-join-prod && git push heroku master"
+    "release-prod": "heroku git:remote -a brillianttv-join-prod && git push heroku master",
+    "release-prod2": "heroku git:remote -a brillianttv-join-prod2 && git push heroku master"
   },
   "engines": {
     "node": "^12.3.1",
