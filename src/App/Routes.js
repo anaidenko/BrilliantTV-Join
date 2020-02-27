@@ -1,7 +1,7 @@
 import NoMatchPage from '../pages/NoMatchPage';
 import SignupPage from '../pages/SignupPage';
 
-const planParam = ':plan(monthly|annual|annual-$147|annual-147|yearly|yearly-$147|yearly-147)';
+const planParam = ':plan(monthly|annual|annual-147|annual-97|yearly|yearly-147|yearly-97)';
 
 const routes = [
   {

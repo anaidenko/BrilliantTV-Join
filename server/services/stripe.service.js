@@ -84,11 +84,12 @@ exports.getPlanId = (name) => {
     case 'annual':
     case 'yearly':
       return process.env.STRIPE_YEARLY_PLAN_ID;
-    case 'annual-$147':
-    case 'yearly-$147':
     case 'annual-147':
     case 'yearly-147':
       return process.env.STRIPE_YEARLY_147_PLAN_ID;
+    case 'annual-97':
+    case 'yearly-97':
+      return process.env.STRIPE_YEARLY_97_PLAN_ID;
     case 'monthly':
       return process.env.STRIPE_MONTHLY_PLAN_ID;
   }
