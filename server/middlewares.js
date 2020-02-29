@@ -51,8 +51,12 @@ exports.parseSignupMetadata = (req, res, next) => {
 };
 
 exports.parseRegisteredMetadata = (req, res, next) => {
-  const { email } = req.query;
-  const { name: plan } = req.params;
+  let { email } = req.query;
+  let { name: plan } = req.params;
+
+  // normalize
+  email = (email || '').toLowerCase();
+  plan = (plan || '').toLowerCase();
 
   // validate
   if (!email) {
