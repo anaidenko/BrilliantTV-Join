@@ -1,5 +1,6 @@
 const apicache = require('apicache');
 const services = require('./services');
+const createError = require('http-errors');
 const error = require('./services/error.service');
 const logger = require('./services/logger.service');
 const config = require('./config');
@@ -110,6 +111,56 @@ exports.signup = async function(req, res) {
     res.send({ ...response, ok: true });
   } catch (err) {
     error.log('controller:signup', err);
+    error.send(req, res, err);
+  }
+};
+
+exports.customerRegistered = async function(req, res) {
+  try {
+    const { email } = req.metadata;
+
+    const stripeCustomer = await services.stripe.findCustomer(email);
+
+    if (stripeCustomer && stripeCustomer.metadata && stripeCustomer.metadata.vhxCustomerHref) {
+      const vhxCustomer = await services.vhx.findCustomer(stripeCustomer.metadata.vhxCustomerHref);
+      if (vhxCustomer) {
+        res.json({ email, registered: true });
+        return;
+      }
+    }
+
+    res.json({ email, registered: false });
+  } catch (err) {
+    error.log('controller:customerRegistered', err);
+    error.send(req, res, err);
+  }
+};
+
+exports.customerSubscribedToPlan = async function(req, res) {
+  try {
+    const { email, plan } = req.metadata;
+
+    const stripeCustomer = await services.stripe.findCustomer(email);
+
+    if (stripeCustomer && plan) {
+      const stripeSubscription = await services.stripe.findSubscription(stripeCustomer, plan);
+      if (!stripeSubscription) {
+        res.json({ email, registered: false });
+        return;
+      }
+    }
+
+    if (stripeCustomer && stripeCustomer.metadata && stripeCustomer.metadata.vhxCustomerHref) {
+      const vhxCustomer = await services.vhx.findCustomer(stripeCustomer.metadata.vhxCustomerHref);
+      if (vhxCustomer) {
+        res.json({ email, registered: true });
+        return;
+      }
+    }
+
+    res.json({ email, registered: false });
+  } catch (err) {
+    error.log('controller:customerSubscribedToPlan', err);
     error.send(req, res, err);
   }
 };

@@ -1,6 +1,6 @@
 // @flow
 
-import { Box, Button, Checkbox, FormControlLabel, Grid, Link, Typography } from '@material-ui/core';
+import { Box, Button, Checkbox, FormControlLabel, FormHelperText, Grid, Link, Typography } from '@material-ui/core';
 import { withStyles } from '@material-ui/core/styles';
 import classNames from 'classnames';
 import React, { Component } from 'react';
@@ -33,8 +33,13 @@ type State = {
 
   performingAction: boolean,
   errors: Object,
+  serverSuccess?: boolean,
   serverError: string,
   showErrors: boolean,
+
+  alreadyRegistered?: boolean,
+  alreadyRegisteredChecking?: boolean,
+  resetPasswordUrl?: string,
 };
 
 const styles = (theme) => ({
@@ -86,6 +91,9 @@ const styles = (theme) => ({
       textDecoration: 'underline',
     },
   },
+  resetPasswordLink: {
+    color: '#1976d2',
+  },
   login: {
     marginTop: theme.spacing(3),
   },
@@ -108,6 +116,7 @@ class CheckoutForm extends Component<Props, State> {
 
     this.state = {
       emailAddress: '',
+      emailAddressChanged: false,
       fullName: '',
       password: '',
       passwordConfirmation: '',
@@ -200,8 +209,14 @@ class CheckoutForm extends Component<Props, State> {
           if (response.ok) {
             const content = await response.json();
             console.log('Signup Succeed', content);
-            if (onComplete) {
-              onComplete();
+
+            if (content.isNewCustomer) {
+              if (onComplete) {
+                onComplete();
+              }
+            } else {
+              const resetPasswordUrl = this.generateResetPasswordUrl(content.vhxCustomer.email);
+              this.setState({ serverSuccess: true, alreadyRegistered: true, resetPasswordUrl });
             }
           } else {
             await this.handleError(response, 'Signup Error');
@@ -211,6 +226,10 @@ class CheckoutForm extends Component<Props, State> {
     }
   };
 
+  generateResetPasswordUrl(email) {
+    return `${environment.VHX_PORTAL_URL}/forgot_password?email=${encodeURIComponent(email)}`;
+  }
+
   handleFieldChange = (fieldName) => (event) => {
     const { showErrors } = this.state;
     const { value } = event.target;
@@ -219,6 +238,11 @@ class CheckoutForm extends Component<Props, State> {
         this.validateField(fieldName, value);
       }
     });
+  };
+
+  handleEmailFieldChange = (event) => {
+    this.handleFieldChange('emailAddress')(event);
+    this.setState({ alreadyRegistered: undefined, alreadyRegisteredChecking: true });
   };
 
   handleCouponFieldKeyDown = (event) => {
@@ -235,6 +259,30 @@ class CheckoutForm extends Component<Props, State> {
     this.setState({ [fieldName]: value }, () => {
       if (showErrors) {
         this.validateField(fieldName, value);
+      }
+    });
+  };
+
+  handleEmailFieldBlur = () => {
+    const { planSlug } = this.props;
+    const { emailAddress, alreadyRegisteredChecking } = this.state;
+    if (!alreadyRegisteredChecking || !emailAddress || !validator.isEmail(emailAddress)) {
+      return;
+    }
+    this.setState({ alreadyRegistered: undefined });
+    fetch(
+      `${environment.REACT_APP_BACKEND_URL}/plan/${planSlug}/registered?email=${encodeURIComponent(emailAddress)}`,
+    ).then(async (response) => {
+      if (response.ok) {
+        const content = await response.json();
+        if (this.state.emailAddress === content.email) {
+          if (content.registered) {
+            const resetPasswordUrl = this.generateResetPasswordUrl(content.email);
+            this.setState({ alreadyRegistered: true, resetPasswordUrl, alreadyRegisteredChecking: false });
+          } else {
+            this.setState({ alreadyRegistered: false, resetPasswordUrl: '', alreadyRegisteredChecking: false });
+          }
+        }
       }
     });
   };
@@ -302,8 +350,8 @@ class CheckoutForm extends Component<Props, State> {
       const content = await response.json();
       errorMessage = (content && content.message) || response.statusText;
       error = this.formatError(errorMessage);
-    } catch (err) {
-      innerError = err;
+    } catch (error_) {
+      innerError = error_;
       errorMessage = 'Server Error. Please try again later.';
       error = errorMessage;
     }
@@ -348,8 +396,11 @@ class CheckoutForm extends Component<Props, State> {
       couponCode,
       couponDetails,
       marketingOptIn,
+      alreadyRegistered,
+      resetPasswordUrl,
 
       errors,
+      serverSuccess,
       serverError,
       showErrors,
     } = this.state;
@@ -391,13 +442,32 @@ class CheckoutForm extends Component<Props, State> {
               fullWidth
               helperText={errors && errors.emailAddress ? errors.emailAddress[0] : ''}
               label="Your Email Address"
-              onChange={this.handleFieldChange('emailAddress')}
+              onChange={this.handleEmailFieldChange}
+              onBlur={this.handleEmailFieldBlur}
               placeholder="Your Email Address Here"
               required
               type="email"
               value={emailAddress}
               variant="filled"
             />
+            {!serverSuccess && !performingAction && alreadyRegistered && (
+              <>
+                <FormHelperText error>
+                  {/* It looks like you already have been registered at BrilliantTV. */}
+                  It looks like you already have an account with BrilliantTV.
+                </FormHelperText>
+
+                {resetPasswordUrl && (
+                  <FormHelperText>
+                    Would you like to{' '}
+                    <Link href={resetPasswordUrl} className={c.resetPasswordLink} target="_blank">
+                      reset your password
+                    </Link>
+                    ?
+                  </FormHelperText>
+                )}
+              </>
+            )}
           </Grid>
           <Grid item className={c.grid}>
             <TextField
@@ -493,18 +563,70 @@ class CheckoutForm extends Component<Props, State> {
           </Box>
         )}
 
-        <Button
-          className={c.register}
-          color="secondary"
-          disabled={!fullName || !emailAddress || !password || !passwordConfirmation || performingAction}
-          fullWidth
-          onClick={this.handleRegisterClick}
-          size="large"
-          variant="contained"
-          aria-label={!prePurchased ? 'click to submit payment' : 'click to register'}
-        >
-          {!prePurchased ? 'Submit Payment' : 'Register'}
-        </Button>
+        {serverSuccess && alreadyRegistered && (
+          <>
+            <Box my={2}>
+              <FeedbackSnackbarContent
+                className={c.feedback}
+                variant="warning"
+                message={
+                  <span>
+                    It looks like you already have an account with BrilliantTV.
+                    {resetPasswordUrl && (
+                      <span>
+                        {' '}
+                        Would you like to{' '}
+                        <Link href={resetPasswordUrl} className={c.resetPasswordLink} target="_blank">
+                          reset your password
+                        </Link>
+                        ?
+                      </span>
+                    )}
+                  </span>
+                }
+              />
+            </Box>
+            <Box my={2}>
+              <FeedbackSnackbarContent
+                className={c.feedback}
+                variant="success"
+                message="Thank you, you have been successfully subscribed at BrilliantTV!"
+              />
+            </Box>
+          </>
+        )}
+
+        {!prePurchased && (
+          <Button
+            className={c.register}
+            color="secondary"
+            disabled={!fullName || !emailAddress || !password || !passwordConfirmation || performingAction}
+            fullWidth
+            onClick={this.handleRegisterClick}
+            size="large"
+            variant="contained"
+            aria-label="click to submit payment"
+          >
+            Submit Payment
+          </Button>
+        )}
+
+        {prePurchased && (
+          <Button
+            className={c.register}
+            color="secondary"
+            disabled={
+              !fullName || !emailAddress || !password || !passwordConfirmation || performingAction || alreadyRegistered
+            }
+            fullWidth
+            onClick={this.handleRegisterClick}
+            size="large"
+            variant="contained"
+            aria-label="click to register"
+          >
+            Register
+          </Button>
+        )}
 
         <Grid item className={c.grid}>
           <FormControlLabel

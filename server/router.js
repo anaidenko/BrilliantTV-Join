@@ -15,12 +15,14 @@ router.get('/config', cache('24 hours'), controller.config);
 router.get('/config/:plan', cache('1 hour'), controller.config);
 
 router.get('/plan/:name', cache('1 hour'), controller.planDetails);
+router.get('/plan/:name/registered', middlewares.parseRegisteredMetadata, controller.customerSubscribedToPlan);
 router.get('/coupon/:code', cache('1 hour'), controller.couponDetails);
 
 router.get('/cache/invalidate', controller.invalidateCache);
 
 // router.post('/signup', (req, res) => res.json({ ok: true }));
 
+router.get('/registered', middlewares.parseRegisteredMetadata, controller.customerRegistered);
 router.post('/signup', middlewares.parseSignupMetadata, controller.signup);
 
 router.all('*', (req, res, next) => {

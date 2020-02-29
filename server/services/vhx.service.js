@@ -34,6 +34,11 @@ exports.signup = async (metadata, vhxCustomerHref) => {
   }
 };
 
+exports.findCustomer = async (href) => {
+  let customer = href ? await findCustomer(href) : null;
+  return customer;
+};
+
 // #endregion
 
 // #region Private Helpers

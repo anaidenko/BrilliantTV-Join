@@ -49,3 +49,30 @@ exports.parseSignupMetadata = (req, res, next) => {
 
   return metadata;
 };
+
+exports.parseRegisteredMetadata = (req, res, next) => {
+  const { email } = req.query;
+  const { name: plan } = req.params;
+
+  // validate
+  if (!email) {
+    throw createError(400, 'Email not provided');
+  }
+
+  if (!validator.isEmail(email)) {
+    throw createError(400, 'Email invalid');
+  }
+
+  const planId = plan ? services.stripe.getPlanId(plan) : null;
+  if (plan && !planId) {
+    throw createError(404, 'Plan not found');
+  }
+
+  // compose
+  const metadata = { email, plan, planId };
+
+  req.metadata = metadata;
+  next();
+
+  return metadata;
+};

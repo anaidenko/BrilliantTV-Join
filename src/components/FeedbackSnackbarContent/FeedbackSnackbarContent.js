@@ -62,7 +62,7 @@ function FeedbackSnackbarContent(props) {
       }
       action={[
         <IconButton key="close" aria-label="close" color="inherit" onClick={onClose}>
-          <CloseIcon className={c.icon} />
+          {onClose && <CloseIcon className={c.icon} />}
         </IconButton>,
       ]}
       {...other}

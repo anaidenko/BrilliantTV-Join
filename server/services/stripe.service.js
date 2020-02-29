@@ -53,6 +53,16 @@ exports.assertSubscribed = async (metadata) => {
   return { stripeCustomer: customer, stripeSubscription: subscription };
 };
 
+exports.findCustomer = async (email) => {
+  const customer = await findCustomer(email);
+  return customer;
+};
+
+exports.findSubscription = async (customer, planId) => {
+  const subscription = await findSubscription(customer, planId);
+  return subscription;
+};
+
 exports.subscribe = async (metadata) => {
   // Reject repeated signup call if there are any pending requests for this user matched by email
   checkRepeatedSignupCallFor(metadata.email);
