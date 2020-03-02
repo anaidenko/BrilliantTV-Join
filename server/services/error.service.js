@@ -33,7 +33,7 @@ class ErrorHandler {
 
     if (err.inner) {
       // log user-friendly message for tracking purposes
-      logger.debug(err.message);
+      logger.debug('ErrorHandler.send', err.message);
     }
 
     if (err) {
