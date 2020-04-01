@@ -34,7 +34,7 @@ exports.getCoupon = async (code) => {
 };
 
 exports.assertSubscribed = async (metadata) => {
-  const customer = await findCustomer(metadata.email);
+  const customer = await lookupCustomer(metadata.email);
   if (!customer) {
     throw createError(
       400,
@@ -54,7 +54,7 @@ exports.assertSubscribed = async (metadata) => {
 };
 
 exports.findCustomer = async (email) => {
-  const customer = await findCustomer(email);
+  const customer = await lookupCustomer(email);
   return customer;
 };
 
@@ -133,6 +133,15 @@ function checkRepeatedSignupCallFor(email) {
   }
 }
 
+async function lookupCustomer(email) {
+  let customer;
+  customer = customer || (await findCustomer(email));
+  customer = customer || (await findCustomer(email.toLowerCase()));
+  customer = customer || (await findCustomer(email.toUpperCase()));
+  customer = customer || (await findCustomer(nameToTitleCase(email)));
+  return customer;
+}
+
 async function findCustomer(email) {
   try {
     // find a customer on Stripe by email address
@@ -149,7 +158,7 @@ async function findCustomer(email) {
 
 async function findOrCreateCustomer(metadata) {
   // find a customer on Stripe by email address
-  let customer = await findCustomer(metadata.email);
+  let customer = await lookupCustomer(metadata.email);
 
   if (!customer) {
     // if not found, create a new stripe customer
@@ -254,6 +263,18 @@ async function createSubscription(customer, coupon, metadata) {
 
 function customerDisplayName(customer) {
   return `${customer.name} (${customer.email})`;
+}
+
+function nameToTitleCase(email) {
+  const [name, ...domain] = email.split('@');
+  const result = [toTitleCase(name), ...domain].join('@');
+  return result;
+}
+
+function toTitleCase(str) {
+  return str.replace(/[a-z]+/gi, function(txt) {
+    return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+  });
 }
 
 // #endregion

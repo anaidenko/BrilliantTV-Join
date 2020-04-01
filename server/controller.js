@@ -119,7 +119,7 @@ exports.customerRegistered = async function(req, res) {
   try {
     const { email, _email } = req.metadata;
 
-    const stripeCustomer = (await services.stripe.findCustomer(email)) || (await services.stripe.findCustomer(_email));
+    const stripeCustomer = await services.stripe.findCustomer(_email);
 
     if (stripeCustomer && stripeCustomer.metadata && stripeCustomer.metadata.vhxCustomerHref) {
       const vhxCustomer = await services.vhx.findCustomer(stripeCustomer.metadata.vhxCustomerHref);
@@ -140,7 +140,7 @@ exports.customerSubscribedToPlan = async function(req, res) {
   try {
     const { email, _email, plan } = req.metadata;
 
-    const stripeCustomer = (await services.stripe.findCustomer(email)) || (await services.stripe.findCustomer(_email));
+    const stripeCustomer = await services.stripe.findCustomer(_email);
 
     if (stripeCustomer && plan) {
       const stripeSubscription = await services.stripe.findSubscription(stripeCustomer, plan);
