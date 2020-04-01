@@ -568,6 +568,13 @@ class CheckoutForm extends Component<Props, State> {
             <Box my={2}>
               <FeedbackSnackbarContent
                 className={c.feedback}
+                variant="success"
+                message="Thank you, you have been successfully subscribed at BrilliantTV!"
+              />
+            </Box>
+            <Box my={2}>
+              <FeedbackSnackbarContent
+                className={c.feedback}
                 variant="warning"
                 message={
                   <span>
@@ -584,13 +591,6 @@ class CheckoutForm extends Component<Props, State> {
                     )}
                   </span>
                 }
-              />
-            </Box>
-            <Box my={2}>
-              <FeedbackSnackbarContent
-                className={c.feedback}
-                variant="success"
-                message="Thank you, you have been successfully subscribed at BrilliantTV!"
               />
             </Box>
           </>
