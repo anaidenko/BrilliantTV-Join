@@ -117,9 +117,9 @@ exports.signup = async function(req, res) {
 
 exports.customerRegistered = async function(req, res) {
   try {
-    const { email } = req.metadata;
+    const { email, _email } = req.metadata;
 
-    const stripeCustomer = await services.stripe.findCustomer(email);
+    const stripeCustomer = (await services.stripe.findCustomer(email)) || (await services.stripe.findCustomer(_email));
 
     if (stripeCustomer && stripeCustomer.metadata && stripeCustomer.metadata.vhxCustomerHref) {
       const vhxCustomer = await services.vhx.findCustomer(stripeCustomer.metadata.vhxCustomerHref);
@@ -138,9 +138,9 @@ exports.customerRegistered = async function(req, res) {
 
 exports.customerSubscribedToPlan = async function(req, res) {
   try {
-    const { email, plan } = req.metadata;
+    const { email, _email, plan } = req.metadata;
 
-    const stripeCustomer = await services.stripe.findCustomer(email);
+    const stripeCustomer = (await services.stripe.findCustomer(email)) || (await services.stripe.findCustomer(_email));
 
     if (stripeCustomer && plan) {
       const stripeSubscription = await services.stripe.findSubscription(stripeCustomer, plan);

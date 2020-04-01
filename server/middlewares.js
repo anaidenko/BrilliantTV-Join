@@ -55,6 +55,7 @@ exports.parseRegisteredMetadata = (req, res, next) => {
   let { name: plan } = req.params;
 
   // normalize
+  const _email = email || ''; // original
   email = (email || '').toLowerCase();
   plan = (plan || '').toLowerCase();
 
@@ -73,7 +74,7 @@ exports.parseRegisteredMetadata = (req, res, next) => {
   }
 
   // compose
-  const metadata = { email, plan, planId };
+  const metadata = { email, plan, planId, _email };
 
   req.metadata = metadata;
   next();
