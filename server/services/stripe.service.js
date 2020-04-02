@@ -241,13 +241,13 @@ async function createSubscription(customer, coupon, metadata) {
     items: [
       {
         plan: metadata.planId,
-        metadata: {
-          product: metadata.product,
-          plan: metadata.plan,
-          marketingOptIn: metadata.marketingOptIn,
-        },
       },
     ],
+    metadata: {
+      product: metadata.product,
+      plan: metadata.plan,
+      marketingOptIn: metadata.marketingOptIn,
+    },
     coupon: coupon ? coupon.id : undefined,
   };
 
