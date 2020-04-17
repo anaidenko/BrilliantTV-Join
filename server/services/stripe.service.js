@@ -34,7 +34,7 @@ exports.getCoupon = async (code) => {
 };
 
 exports.assertSubscribed = async (metadata) => {
-  const customer = await lookupCustomer(metadata.email);
+  const customer = await lookupCustomer(metadata._email || metadata.email);
   if (!customer) {
     throw createError(
       400,
@@ -158,7 +158,7 @@ async function findCustomer(email) {
 
 async function findOrCreateCustomer(metadata) {
   // find a customer on Stripe by email address
-  let customer = await lookupCustomer(metadata.email);
+  let customer = await lookupCustomer(metadata._email || metadata.email);
 
   if (!customer) {
     // if not found, create a new stripe customer

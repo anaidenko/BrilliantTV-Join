@@ -7,6 +7,7 @@ exports.parseSignupMetadata = (req, res, next) => {
 
   // compose
   const metadata = {
+    _email: body.email || '',
     email: (body.email || '').toLowerCase(),
     name: body.name,
     password: body.password || undefined,
